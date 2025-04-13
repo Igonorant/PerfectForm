@@ -38,5 +38,3 @@ build
 *.code-workspace
 .vscode
 
-# Example folder
-src/examples
