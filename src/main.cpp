@@ -44,8 +44,10 @@ static const struct
 {
     const char *key;
     const char *value;
-} extended_metadata[] = {{SDL_PROP_APP_METADATA_CREATOR_STRING, "Igonorant"},
-                         {SDL_PROP_APP_METADATA_TYPE_STRING, "game"}};
+} extended_metadata[] = {
+    {SDL_PROP_APP_METADATA_CREATOR_STRING, "Igonorant"},
+    {   SDL_PROP_APP_METADATA_TYPE_STRING,      "game"}
+};
 
 SDL_AppResult SDL_AppInit(void **as, int /*argc*/, char * /*argv*/[])
 {
