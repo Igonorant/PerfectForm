@@ -47,7 +47,7 @@ static const struct
 } extended_metadata[] = {{SDL_PROP_APP_METADATA_CREATOR_STRING, "Igonorant"},
                          {SDL_PROP_APP_METADATA_TYPE_STRING, "game"}};
 
-SDL_AppResult SDL_AppInit(void **as, int argc, char *argv[])
+SDL_AppResult SDL_AppInit(void **as, int /*argc*/, char * /*argv*/[])
 {
     size_t i;
 
@@ -83,7 +83,7 @@ SDL_AppResult SDL_AppInit(void **as, int argc, char *argv[])
     return SDL_APP_CONTINUE;
 }
 
-SDL_AppResult SDL_AppEvent(void *as, SDL_Event *event)
+SDL_AppResult SDL_AppEvent(void * /*as*/, SDL_Event *event)
 {
     switch (event->type)
     {
@@ -114,7 +114,7 @@ SDL_AppResult SDL_AppEvent(void *as, SDL_Event *event)
     return SDL_APP_CONTINUE;
 }
 
-void SDL_AppQuit(void *as, SDL_AppResult result)
+void SDL_AppQuit(void *as, SDL_AppResult /*result*/)
 {
     if (joystick) { SDL_CloseJoystick(joystick); }
     if (as != NULL)
