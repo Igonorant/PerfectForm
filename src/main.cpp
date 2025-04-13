@@ -7,18 +7,18 @@
 #define SDL_WINDOW_WIDTH 1280
 #define SDL_WINDOW_HEIGHT 720
 
-static SDL_Joystick *joystick = NULL;
+static SDL_Joystick* joystick = NULL;
 
 struct AppState
 {
-    SDL_Window *window;
-    SDL_Renderer *renderer;
+    SDL_Window* window;
+    SDL_Renderer* renderer;
     Uint64 lastStep;
 };
 
-SDL_AppResult SDL_AppIterate(void *as)
+SDL_AppResult SDL_AppIterate(void* as)
 {
-    AppState *appState = (AppState *)as;
+    AppState* appState = (AppState*)as;
     const Uint64 now = SDL_GetTicks();
 
     // run game logic if we're at or past the time to run it.
@@ -42,14 +42,14 @@ SDL_AppResult SDL_AppIterate(void *as)
 
 static const struct
 {
-    const char *key;
-    const char *value;
+    const char* key;
+    const char* value;
 } extended_metadata[] = {
     {SDL_PROP_APP_METADATA_CREATOR_STRING, "Igonorant"},
     {   SDL_PROP_APP_METADATA_TYPE_STRING,      "game"}
 };
 
-SDL_AppResult SDL_AppInit(void **as, int /*argc*/, char * /*argv*/[])
+SDL_AppResult SDL_AppInit(void** as, int /*argc*/, char* /*argv*/[])
 {
     size_t i;
 
@@ -68,7 +68,7 @@ SDL_AppResult SDL_AppInit(void **as, int /*argc*/, char * /*argv*/[])
         return SDL_APP_FAILURE;
     }
 
-    AppState *appState = (AppState *)SDL_calloc(1, sizeof(AppState));
+    AppState* appState = (AppState*)SDL_calloc(1, sizeof(AppState));
     if (!appState) { return SDL_APP_FAILURE; }
     *as = appState;
 
@@ -85,7 +85,7 @@ SDL_AppResult SDL_AppInit(void **as, int /*argc*/, char * /*argv*/[])
     return SDL_APP_CONTINUE;
 }
 
-SDL_AppResult SDL_AppEvent(void * /*as*/, SDL_Event *event)
+SDL_AppResult SDL_AppEvent(void* /*as*/, SDL_Event* event)
 {
     switch (event->type)
     {
@@ -116,12 +116,12 @@ SDL_AppResult SDL_AppEvent(void * /*as*/, SDL_Event *event)
     return SDL_APP_CONTINUE;
 }
 
-void SDL_AppQuit(void *as, SDL_AppResult /*result*/)
+void SDL_AppQuit(void* as, SDL_AppResult /*result*/)
 {
     if (joystick) { SDL_CloseJoystick(joystick); }
     if (as != NULL)
     {
-        AppState *appState = (AppState *)as;
+        AppState* appState = (AppState*)as;
         SDL_DestroyRenderer(appState->renderer);
         SDL_DestroyWindow(appState->window);
         SDL_free(appState);
