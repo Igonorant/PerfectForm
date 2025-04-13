@@ -8,6 +8,7 @@ We recommend installing [MSYS2](https://www.msys2.org/)
 Open the `MSYS2 UCRT64` prompt and then ensure you've installed the following packages. This will get you working toolchain, CMake, Ninja, and of course SDL3.
 
 ```sh
+pacman -Syu
 pacman -S mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-sdl3
 ```
 
