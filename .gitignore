@@ -37,3 +37,6 @@ build
 # VS Code workspace
 *.code-workspace
 .vscode
+
+# Example folder
+src/example
