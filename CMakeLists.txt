@@ -7,7 +7,7 @@ add_executable(perfectform)
 
 target_sources(perfectform
 PRIVATE
-    src/snake.cpp
+    src/main.cpp
 )
 
 target_link_libraries(perfectform SDL3::SDL3)
