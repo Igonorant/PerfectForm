@@ -44,19 +44,14 @@ static const struct
 {
     const char *key;
     const char *value;
-} extended_metadata[] =
-    {
-        {SDL_PROP_APP_METADATA_CREATOR_STRING, "Igonorant"},
-        {SDL_PROP_APP_METADATA_TYPE_STRING, "game"}};
+} extended_metadata[] = {{SDL_PROP_APP_METADATA_CREATOR_STRING, "Igonorant"},
+                         {SDL_PROP_APP_METADATA_TYPE_STRING, "game"}};
 
 SDL_AppResult SDL_AppInit(void **as, int argc, char *argv[])
 {
     size_t i;
 
-    if (!SDL_SetAppMetadata("Perfect Form", "0.1", "com.igonorant.perfectform"))
-    {
-        return SDL_APP_FAILURE;
-    }
+    if (!SDL_SetAppMetadata("Perfect Form", "0.1", "com.igonorant.perfectform")) { return SDL_APP_FAILURE; }
     for (i = 0; i < SDL_arraysize(extended_metadata); i++)
     {
         if (!SDL_SetAppMetadataProperty(extended_metadata[i].key, extended_metadata[i].value))
@@ -72,13 +67,11 @@ SDL_AppResult SDL_AppInit(void **as, int argc, char *argv[])
     }
 
     AppState *appState = (AppState *)SDL_calloc(1, sizeof(AppState));
-    if (!appState)
-    {
-        return SDL_APP_FAILURE;
-    }
+    if (!appState) { return SDL_APP_FAILURE; }
     *as = appState;
 
-    if (!SDL_CreateWindowAndRenderer("Perfect Form", SDL_WINDOW_WIDTH, SDL_WINDOW_HEIGHT, 0, &appState->window, &appState->renderer))
+    if (!SDL_CreateWindowAndRenderer("Perfect Form", SDL_WINDOW_WIDTH, SDL_WINDOW_HEIGHT, 0, &appState->window,
+                                     &appState->renderer))
     {
         return SDL_APP_FAILURE;
     }
@@ -94,41 +87,36 @@ SDL_AppResult SDL_AppEvent(void *as, SDL_Event *event)
 {
     switch (event->type)
     {
-    case SDL_EVENT_QUIT:
-        return SDL_APP_SUCCESS;
-    case SDL_EVENT_JOYSTICK_ADDED:
-        if (joystick == NULL)
-        {
-            joystick = SDL_OpenJoystick(event->jdevice.which);
-            if (!joystick)
+        case SDL_EVENT_QUIT: return SDL_APP_SUCCESS;
+        case SDL_EVENT_JOYSTICK_ADDED:
+            if (joystick == NULL)
             {
-                SDL_Log("Failed to open joystick ID %u: %s", (unsigned int)event->jdevice.which, SDL_GetError());
+                joystick = SDL_OpenJoystick(event->jdevice.which);
+                if (!joystick)
+                {
+                    SDL_Log("Failed to open joystick ID %u: %s", (unsigned int)event->jdevice.which, SDL_GetError());
+                }
             }
-        }
-        break;
-    case SDL_EVENT_JOYSTICK_REMOVED:
-        if (joystick && (SDL_GetJoystickID(joystick) == event->jdevice.which))
-        {
-            SDL_CloseJoystick(joystick);
-            joystick = NULL;
-        }
-        break;
-    case SDL_EVENT_JOYSTICK_HAT_MOTION:
-        // HANDLE JOYSTICK HAT MOTION HERE
-    case SDL_EVENT_KEY_DOWN:
-        // HANDLE KEYBOARD INPUT HERE
-    default:
-        break;
+            break;
+        case SDL_EVENT_JOYSTICK_REMOVED:
+            if (joystick && (SDL_GetJoystickID(joystick) == event->jdevice.which))
+            {
+                SDL_CloseJoystick(joystick);
+                joystick = NULL;
+            }
+            break;
+        case SDL_EVENT_JOYSTICK_HAT_MOTION:
+            // HANDLE JOYSTICK HAT MOTION HERE
+        case SDL_EVENT_KEY_DOWN:
+            // HANDLE KEYBOARD INPUT HERE
+        default: break;
     }
     return SDL_APP_CONTINUE;
 }
 
 void SDL_AppQuit(void *as, SDL_AppResult result)
 {
-    if (joystick)
-    {
-        SDL_CloseJoystick(joystick);
-    }
+    if (joystick) { SDL_CloseJoystick(joystick); }
     if (as != NULL)
     {
         AppState *appState = (AppState *)as;
