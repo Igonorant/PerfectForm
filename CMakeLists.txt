@@ -16,6 +16,8 @@ add_executable(perfectform)
 target_sources(perfectform
 PRIVATE
     src/main.cpp
+    src/TextureManager.cpp
+    src/TextureManager.h
 )
 
 # Enable all warnings

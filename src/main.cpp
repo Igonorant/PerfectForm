@@ -2,6 +2,13 @@
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <SDL3_image/SDL_image.h>
+#include <math.h>
+
+#include <limits>
+#include <stdexcept>
+
+#include "TextureManager.h"
 
 #define SIMULATION_STEP_RATE_IN_MILLISECONDS 7
 #define SDL_WINDOW_WIDTH 1280
@@ -13,7 +20,11 @@ struct AppState
 {
     SDL_Window* window;
     SDL_Renderer* renderer;
+
     Uint64 lastStep;
+
+    PF::TextureManager textureManager;
+    std::size_t textureIndex = std::numeric_limits<std::size_t>::max();
 };
 
 SDL_AppResult SDL_AppIterate(void* as)
@@ -33,9 +44,26 @@ SDL_AppResult SDL_AppIterate(void* as)
         appState->lastStep += SIMULATION_STEP_RATE_IN_MILLISECONDS;
     }
 
-    SDL_SetRenderDrawColor(appState->renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+    SDL_SetRenderDrawColor(appState->renderer, 255, 230, 190, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(appState->renderer);
     // ADD RENDERING LOGIC HERE
+
+    float angle = (float)(now * 0.0007f);  // Convert ms to seconds for smoother motion
+    float orbitX = sinf(angle) * 100.0f;   // Oscillates between -100.0f and 100.0f
+    float orbitY = cosf(angle) * 100.0f;   // Creates circular pattern when combined with scale_x
+
+    auto& texture = appState->textureManager.getTexture(appState->textureIndex).get();
+
+    SDL_FRect dst_rect;
+    dst_rect.x = orbitX + SDL_WINDOW_WIDTH / 2.0f - texture.w / 2.0f;
+    dst_rect.y = orbitY + SDL_WINDOW_HEIGHT / 2.0f - texture.h / 2.0f;
+    dst_rect.w = texture.w * 2.0f;
+    dst_rect.h = texture.h * 2.0f;
+
+    // SDL_RenderTexture(appState->renderer, &texture, NULL, &dst_rect);
+    double rotationAngle = now * 0.1f;  // Rotate 0.1 degrees per millisecond
+    SDL_RenderTextureRotated(appState->renderer, &texture, NULL, &dst_rect, rotationAngle, NULL, SDL_FLIP_NONE);
+
     SDL_RenderPresent(appState->renderer);
     return SDL_APP_CONTINUE;
 }
@@ -79,6 +107,16 @@ SDL_AppResult SDL_AppInit(void** as, int /*argc*/, char* /*argv*/[])
     }
 
     // INITIALIZE GAME STUFF HERE
+    try
+    {
+        constexpr std::string_view cellAsset = "../../assets/BaseCell_32x32.png";
+        appState->textureIndex = appState->textureManager.addTexture(appState->renderer, cellAsset);
+    }
+    catch (const std::exception& e)
+    {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR, e.what());
+        return SDL_APP_FAILURE;
+    }
 
     appState->lastStep = SDL_GetTicks();
 
