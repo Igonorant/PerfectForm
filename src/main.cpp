@@ -8,7 +8,7 @@
 #include <limits>
 #include <stdexcept>
 
-#include "TextureManager.h"
+#include "Game.h"
 
 #define SIMULATION_STEP_RATE_IN_MILLISECONDS 7
 #define SDL_WINDOW_WIDTH 1280
@@ -23,7 +23,7 @@ struct AppState
 
     Uint64 lastStep;
 
-    PF::TextureManager textureManager;
+    PF::Game game;
     std::size_t textureIndex = std::numeric_limits<std::size_t>::max();
 };
 
@@ -52,7 +52,7 @@ SDL_AppResult SDL_AppIterate(void* as)
     float orbitX = sinf(angle) * 100.0f;   // Oscillates between -100.0f and 100.0f
     float orbitY = cosf(angle) * 100.0f;   // Creates circular pattern when combined with scale_x
 
-    auto& texture = appState->textureManager.getTexture(appState->textureIndex).get();
+    auto& texture = appState->game.getTextureManager().getTexture(appState->textureIndex).get();
 
     SDL_FRect dst_rect;
     dst_rect.x = orbitX + SDL_WINDOW_WIDTH / 2.0f - texture.w / 2.0f;
@@ -98,19 +98,18 @@ SDL_AppResult SDL_AppInit(void** as, int /*argc*/, char* /*argv*/[])
 
     AppState* appState = (AppState*)SDL_calloc(1, sizeof(AppState));
     if (!appState) { return SDL_APP_FAILURE; }
-    *as = appState;
-
     if (!SDL_CreateWindowAndRenderer("Perfect Form", SDL_WINDOW_WIDTH, SDL_WINDOW_HEIGHT, 0, &appState->window,
                                      &appState->renderer))
     {
         return SDL_APP_FAILURE;
     }
+    appState->game = PF::Game(appState->renderer);
+    *as = appState;
 
-    // INITIALIZE GAME STUFF HERE
     try
     {
         constexpr std::string_view cellAsset = "../../assets/BaseCell_32x32.png";
-        appState->textureIndex = appState->textureManager.addTexture(appState->renderer, cellAsset);
+        appState->textureIndex = appState->game.getTextureManager().addTexture(cellAsset);
     }
     catch (const std::exception& e)
     {

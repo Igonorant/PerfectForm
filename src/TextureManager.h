@@ -47,12 +47,18 @@ class TextureManager
 {
   public:
     /**
+     * @brief Constructs a TextureManager object.
+     * @param renderer The SDL_Renderer used to create textures.
+     */
+    TextureManager(SDL_Renderer* renderer);
+
+    /**
      * @brief Adds a texture to the manager by loading it from a file.
      * @param renderer The SDL_Renderer used to create the texture.
      * @param filePath The path to the image file to load.
      * @return The index of the added texture in the internal collection.
      */
-    std::size_t addTexture(SDL_Renderer* renderer, std::string_view filePath);
+    std::size_t addTexture(std::string_view filePath);
 
     /**
      * @brief Retrieves the texture at the specified index.
@@ -63,6 +69,7 @@ class TextureManager
     const Texture& getTexture(std::size_t index) const;
 
   private:
+    SDL_Renderer* m_renderer;
     std::vector<Texture> m_textures; /**< Collection of loaded textures. */
 };
 }  // namespace PF

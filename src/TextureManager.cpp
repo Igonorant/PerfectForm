@@ -34,9 +34,11 @@ SDL_Texture& PF::Texture::operator->() const { return get(); }
 
 SDL_Texture& PF::Texture::operator*() const { return get(); }
 
-std::size_t PF::TextureManager::addTexture(SDL_Renderer* renderer, std::string_view filePath)
+PF::TextureManager::TextureManager(SDL_Renderer* renderer): m_renderer(renderer) {}
+
+std::size_t PF::TextureManager::addTexture(std::string_view filePath)
 {
-    m_textures.emplace_back(renderer, filePath);
+    m_textures.emplace_back(m_renderer, filePath);
     SDL_Log("Texture added from file: %s\n", filePath.data());
     return m_textures.size() - 1;  // Return the index of the added texture
 }
