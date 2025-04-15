@@ -2,6 +2,9 @@
 
 #include <SDL3/SDL.h>
 
+#include <memory>
+
+#include "Object.h"
 #include "TextureManager.h"
 
 namespace PF
@@ -14,11 +17,19 @@ class Game
   public:
     Game(SDL_Renderer* renderer);
 
+    void update(Uint64 stepMs);
+
+    void render() const;
+
     PF::TextureManager& getTextureManager();
     const PF::TextureManager& getTextureManager() const;
 
   private:
-    SDL_Renderer* m_renderer = nullptr;   // Pointer to the SDL renderer
-    PF::TextureManager m_textureManager;  // Texture manager for handling textures
+    void initializePlayer();  // Initialize player object
+
+  private:
+    SDL_Renderer* m_renderer = nullptr;              // Pointer to the SDL renderer
+    PF::TextureManager m_textureManager;             // Texture manager for handling textures
+    std::vector<std::unique_ptr<Object>> m_objects;  // Collection of game objects
 };
 }  // namespace PF

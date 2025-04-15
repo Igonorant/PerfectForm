@@ -24,7 +24,6 @@ struct AppState
     Uint64 lastStep;
 
     PF::Game game;
-    std::size_t textureIndex = std::numeric_limits<std::size_t>::max();
 };
 
 SDL_AppResult SDL_AppIterate(void* as)
@@ -38,7 +37,8 @@ SDL_AppResult SDL_AppIterate(void* as)
 
     while ((now - appState->lastStep) >= SIMULATION_STEP_RATE_IN_MILLISECONDS)
     {
-        // DO GAME LOGIC HERE
+        const Uint64 stepMs = now - appState->lastStep;
+        appState->game.update(stepMs);
 
         // TODO: increment this by any means necessary!
         appState->lastStep += SIMULATION_STEP_RATE_IN_MILLISECONDS;
@@ -46,23 +46,8 @@ SDL_AppResult SDL_AppIterate(void* as)
 
     SDL_SetRenderDrawColor(appState->renderer, 255, 230, 190, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(appState->renderer);
-    // ADD RENDERING LOGIC HERE
 
-    float angle = (float)(now * 0.0007f);  // Convert ms to seconds for smoother motion
-    float orbitX = sinf(angle) * 100.0f;   // Oscillates between -100.0f and 100.0f
-    float orbitY = cosf(angle) * 100.0f;   // Creates circular pattern when combined with scale_x
-
-    auto& texture = appState->game.getTextureManager().getTexture(appState->textureIndex).get();
-
-    SDL_FRect dst_rect;
-    dst_rect.x = orbitX + SDL_WINDOW_WIDTH / 2.0f - texture.w / 2.0f;
-    dst_rect.y = orbitY + SDL_WINDOW_HEIGHT / 2.0f - texture.h / 2.0f;
-    dst_rect.w = texture.w * 2.0f;
-    dst_rect.h = texture.h * 2.0f;
-
-    // SDL_RenderTexture(appState->renderer, &texture, NULL, &dst_rect);
-    double rotationAngle = now * 0.1f;  // Rotate 0.1 degrees per millisecond
-    SDL_RenderTextureRotated(appState->renderer, &texture, NULL, &dst_rect, rotationAngle, NULL, SDL_FLIP_NONE);
+    appState->game.render();  // Render the game objects
 
     SDL_RenderPresent(appState->renderer);
     return SDL_APP_CONTINUE;
@@ -103,13 +88,11 @@ SDL_AppResult SDL_AppInit(void** as, int /*argc*/, char* /*argv*/[])
     {
         return SDL_APP_FAILURE;
     }
-    appState->game = PF::Game(appState->renderer);
-    *as = appState;
 
     try
     {
-        constexpr std::string_view cellAsset = "../../assets/BaseCell_32x32.png";
-        appState->textureIndex = appState->game.getTextureManager().addTexture(cellAsset);
+        appState->game = PF::Game(appState->renderer);
+        *as = appState;
     }
     catch (const std::exception& e)
     {

@@ -18,6 +18,10 @@ PRIVATE
     src/main.cpp
     src/Game.cpp
     src/Game.h
+    src/Object.cpp
+    src/Object.h
+    src/Player.cpp
+    src/Player.h
     src/TextureManager.cpp
     src/TextureManager.h
 )
