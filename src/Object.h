@@ -14,8 +14,9 @@ class Object
     Object(std::size_t textureIdx, SDL_FRect srcRect, SDL_FPoint position, float size);
     virtual ~Object() = default;
 
-    void render(SDL_Renderer* renderer, const PF::TextureManager& textureManager) const;
     virtual void update(Uint64 stepMs);
+    virtual void handleKeyboardEvent(SDL_Event* event);
+    void render(SDL_Renderer* renderer, const PF::TextureManager& textureManager) const;
 
   private:
     std::size_t m_textureIdx;

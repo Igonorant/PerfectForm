@@ -19,9 +19,15 @@ void PF::Object::render(SDL_Renderer* renderer, const PF::TextureManager& textur
     assert(success);
 }
 
-void PF::Object::update(Uint64 stepMs)
+void PF::Object::update(Uint64 /*stepMs*/)
 {
     // Default implementation does nothing. Derived classes can override this method to provide specific behavior.
     // For example, you might want to update the position or state of the object based on the elapsed time (stepMs).
     assert(0 && "update() method should be overridden in derived classes.");
+}
+
+void PF::Object::handleKeyboardEvent(SDL_Event* /*event*/)
+{
+    // Default implementation does nothing. Derived classes can override this method to provide specific behavior.
+    // For example, you might want to handle keyboard input for controlling the object or triggering actions.
 }

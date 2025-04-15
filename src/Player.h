@@ -15,7 +15,10 @@ class Player : public Object
 
     void update(Uint64 stepMs) override;
 
+    void handleKeyboardEvent(SDL_Event* event) override;
+
   private:
-    float m_angle = 0.0f;  // Angle for circular motion
+    float m_angle = 0.0f;                  // Angle for circular motion
+    SDL_FPoint m_velocity = {0.0f, 0.0f};  // Velocity vector for movement
 };
 }  // namespace PF

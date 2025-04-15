@@ -155,7 +155,7 @@ IncludeCategories:
 IncludeIsMainRegex: ([-_](test|unittest))?$
 IncludeIsMainSourceRegex: ""
 IndentAccessModifiers: false
-IndentCaseBlocks: true
+IndentCaseBlocks: false
 IndentCaseLabels: true
 IndentExternBlock: AfterExternBlock
 IndentGotoLabels: true

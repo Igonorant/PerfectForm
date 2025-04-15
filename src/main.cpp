@@ -105,8 +105,9 @@ SDL_AppResult SDL_AppInit(void** as, int /*argc*/, char* /*argv*/[])
     return SDL_APP_CONTINUE;
 }
 
-SDL_AppResult SDL_AppEvent(void* /*as*/, SDL_Event* event)
+SDL_AppResult SDL_AppEvent(void* as, SDL_Event* event)
 {
+    AppState* appState = (AppState*)as;
     switch (event->type)
     {
         case SDL_EVENT_QUIT: return SDL_APP_SUCCESS;
@@ -129,8 +130,12 @@ SDL_AppResult SDL_AppEvent(void* /*as*/, SDL_Event* event)
             break;
         case SDL_EVENT_JOYSTICK_HAT_MOTION:
             // HANDLE JOYSTICK HAT MOTION HERE
-        case SDL_EVENT_KEY_DOWN:
-            // HANDLE KEYBOARD INPUT HERE
+        case SDL_EVENT_KEY_DOWN: [[fallthrough]];
+        case SDL_EVENT_KEY_UP:
+        {
+            appState->game.handleKeyboardEvent(event);
+            break;
+        }
         default: break;
     }
     return SDL_APP_CONTINUE;
