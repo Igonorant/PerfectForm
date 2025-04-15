@@ -9,10 +9,10 @@ PF::Game::Game(SDL_Renderer* renderer): m_renderer(renderer), m_textureManager(r
 
 void PF::Game::initializePlayer()
 {
-    SDL_FRect srcRect = {0, 0, 32, 32};
+    SDL_FRect srcRect = {0, 0, 64, 64};
     SDL_FPoint position = {1280 / 2.0f, 720 / 2.0f};
-    float size = 2.0f;
-    const auto textureIdx = m_textureManager.addTexture("../../assets/BaseCell_32x32.png");
+    float size = 1.0f;
+    const auto textureIdx = m_textureManager.addTexture("../../assets/BaseCell_64x64.png");
     m_objects.emplace_back(std::make_unique<PF::Player>(textureIdx, srcRect, position, size));
 }
 
