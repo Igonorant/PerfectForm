@@ -15,4 +15,6 @@ void PF::Player::update(Uint64 stepMs)
 
     m_position.x = orbitX + 1280 / 2.0f;
     m_position.y = orbitY + 720 / 2.0f;
+
+    m_size = 1.0f + (sinf(m_angle * 7) * 0.05f);  // Scale between 0.95 and 1.05
 }
