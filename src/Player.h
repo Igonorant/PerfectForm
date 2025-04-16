@@ -15,10 +15,30 @@ class Player : public Object
 
     void update(Uint64 stepMs) override;
 
-    void handleKeyboardEvent(SDL_Event* event) override;
+    std::shared_ptr<PF::Object> handleKeyboardEvent(SDL_Event* event) override;
+
+  private:
+    std::shared_ptr<PF::Object> spawnAttack() const;
 
   private:
     float m_angle = 0.0f;                  // Angle for circular motion
     SDL_FPoint m_velocity = {0.0f, 0.0f};  // Velocity vector for movement
+};
+
+class Attack : public Object
+{
+  public:
+    Attack(std::size_t textureIdx, SDL_FRect srcRect, SDL_FPoint position, float size);
+
+    void update(Uint64 stepMs) override;
+
+    void setVelocity(SDL_FPoint velocity);
+
+    bool shouldRemove() const override;
+
+  private:
+    float m_angle = 0.0f;  // Angle for circular motion
+    SDL_FPoint m_velocity = {0.0f, 0.0f};
+    float m_deceleration = 0.025f;  // Deceleration factor for attack movement
 };
 }  // namespace PF

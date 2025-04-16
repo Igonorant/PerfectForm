@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 
 #include <cstddef>
+#include <memory>
 
 namespace PF
 {
@@ -15,14 +16,14 @@ class Object
     virtual ~Object() = default;
 
     virtual void update(Uint64 stepMs);
-    virtual void handleKeyboardEvent(SDL_Event* event);
+    virtual std::shared_ptr<Object> handleKeyboardEvent(SDL_Event* event);
+    virtual bool shouldRemove() const;
+
     void render(SDL_Renderer* renderer, const PF::TextureManager& textureManager) const;
 
-  private:
+  protected:
     std::size_t m_textureIdx;
     SDL_FRect m_srcRect;
-
-  protected:
     SDL_FPoint m_position;
     float m_size;
 };

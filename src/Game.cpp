@@ -1,6 +1,9 @@
+#include <algorithm>
+
 #include "Game.h"
 #include "Object.h"
 #include "Player.h"
+
 
 PF::Game::Game(SDL_Renderer* renderer): m_renderer(renderer), m_textureManager(renderer)
 {
@@ -21,11 +24,22 @@ void PF::Game::initializePlayer()
 void PF::Game::update(Uint64 stepMs)
 {
     for (auto& object : m_objects) { object->update(stepMs); }
+    m_objects.erase(
+        std::remove_if(m_objects.begin(), m_objects.end(), [](const auto& object) { return object->shouldRemove(); }),
+        m_objects.end());
 }
 
 void PF::Game::handleKeyboardEvent(SDL_Event* event)
 {
-    for (auto& object : m_objects) { object->handleKeyboardEvent(event); }
+    std::vector<std::shared_ptr<PF::Object>> newObjects;
+    for (auto& object : m_objects)
+    {
+        auto newObject = object->handleKeyboardEvent(event);
+        if (newObject) { newObjects.emplace_back(newObject); }
+    }
+    m_objects.insert(m_objects.end(), std::make_move_iterator(newObjects.begin()),
+                     std::make_move_iterator(newObjects.end()));
+
     switch (event->type)
     {
         case SDL_EVENT_KEY_DOWN:
