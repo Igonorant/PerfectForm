@@ -8,6 +8,8 @@
 
 namespace PF
 {
+constexpr float DEFAULT_DECELERATION = 0.025F;
+
 class Player : public Object
 {
   public:
@@ -39,6 +41,6 @@ class Attack : public Object
   private:
     float m_angle = 0.0f;  // Angle for circular motion
     SDL_FPoint m_velocity = {0.0f, 0.0f};
-    float m_deceleration = 0.025f;  // Deceleration factor for attack movement
+    float m_deceleration = DEFAULT_DECELERATION;  // Deceleration factor for attack movement
 };
 }  // namespace PF

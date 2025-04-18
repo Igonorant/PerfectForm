@@ -4,7 +4,6 @@
 #include "Object.h"
 #include "Player.h"
 
-
 PF::Game::Game(SDL_Renderer* renderer): m_renderer(renderer), m_textureManager(renderer)
 {
     // Initialize game objects
@@ -24,9 +23,7 @@ void PF::Game::initializePlayer()
 void PF::Game::update(Uint64 stepMs)
 {
     for (auto& object : m_objects) { object->update(stepMs); }
-    m_objects.erase(
-        std::remove_if(m_objects.begin(), m_objects.end(), [](const auto& object) { return object->shouldRemove(); }),
-        m_objects.end());
+    std::erase_if(m_objects, [](const auto& object) { return object->shouldRemove(); });
 }
 
 void PF::Game::handleKeyboardEvent(SDL_Event* event)

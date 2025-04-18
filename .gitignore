@@ -38,3 +38,5 @@ build
 *.code-workspace
 .vscode
 
+# Clangd cache
+.cache

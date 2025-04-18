@@ -5,6 +5,12 @@ project(perfectform C CXX)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 
+# Set the C++ standard to C++23
+set(CMAKE_CXX_STANDARD 23)
+
+# Set compile commands for clangd
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Add SDL3 and SDL_image as submodules
 add_subdirectory(vendored/SDL EXCLUDE_FROM_ALL)
 add_subdirectory(vendored/SDL_image EXCLUDE_FROM_ALL)

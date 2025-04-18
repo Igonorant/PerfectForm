@@ -14,7 +14,7 @@ void PF::Object::render(SDL_Renderer* renderer, const PF::TextureManager& textur
     auto& texture = textureManager.getTexture(m_textureIdx).get();
     const auto width = m_srcRect.w * m_size;
     const auto height = m_srcRect.h * m_size;
-    SDL_FRect dstRect = {m_position.x - width / 2, m_position.y - height / 2, width, height};
+    SDL_FRect dstRect = {(m_position.x - (width / 2)), (m_position.y - (height / 2)), width, height};
     const bool success = SDL_RenderTexture(renderer, &texture, &m_srcRect, &dstRect);
     assert(success);
 }
