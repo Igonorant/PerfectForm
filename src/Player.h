@@ -23,8 +23,8 @@ class Player : public Object
     std::shared_ptr<PF::Object> spawnAttack() const;
 
   private:
-    float m_angle = 0.0f;                  // Angle for circular motion
-    SDL_FPoint m_velocity = {0.0f, 0.0f};  // Velocity vector for movement
+    float m_angle = 0.0F;                  // Angle for circular motion
+    SDL_FPoint m_velocity = {0.0F, 0.0F};  // Velocity vector for movement
 };
 
 class Attack : public Object
@@ -36,11 +36,11 @@ class Attack : public Object
 
     void setVelocity(SDL_FPoint velocity);
 
-    bool shouldRemove() const override;
+    [[nodiscard]] bool shouldRemove() const override;
 
   private:
-    float m_angle = 0.0f;  // Angle for circular motion
-    SDL_FPoint m_velocity = {0.0f, 0.0f};
+    float m_angle = 0.0F;  // Angle for circular motion
+    SDL_FPoint m_velocity = {0.0F, 0.0F};
     float m_deceleration = DEFAULT_DECELERATION;  // Deceleration factor for attack movement
 };
 }  // namespace PF

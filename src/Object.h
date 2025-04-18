@@ -13,6 +13,10 @@ class Object
 {
   public:
     Object(std::size_t textureIdx, SDL_FRect srcRect, SDL_FPoint position, float size);
+    Object(const Object&) = default;
+    Object(Object&&) = default;
+    Object& operator=(const Object&) = default;
+    Object& operator=(Object&&) = default;
     virtual ~Object() = default;
 
     virtual void update(Uint64 stepMs);
