@@ -1,6 +1,7 @@
 #include <SDL3/SDL.h>
 
 #include <memory>
+#include <utility>
 
 namespace PF
 {
@@ -8,7 +9,8 @@ class TextureManager;
 class Scene
 {
   public:
-    Scene(const PF::TextureManager& textureManager);
+    explicit Scene(std::shared_ptr<const PF::TextureManager> textureManager)
+        : m_textureManager(std::move(textureManager)) {};
     virtual ~Scene() = default;
 
     // Deleted copy and move constructors and assignment operators
@@ -25,6 +27,6 @@ class Scene
     virtual void render() const = 0;
 
   protected:
-    const std::shared_ptr<const PF::TextureManager> textureManager;
+    const std::shared_ptr<const PF::TextureManager> m_textureManager;
 };
 }  // namespace PF

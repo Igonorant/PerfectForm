@@ -1,6 +1,7 @@
 #include <cassert>
 #include <cstddef>
 
+#include "Exceptions.h"
 #include "Object.h"
 #include "TextureManager.h"
 
@@ -16,7 +17,7 @@ void PF::Object::render(SDL_Renderer* renderer, const PF::TextureManager& textur
     const auto height = m_srcRect.h * m_size;
     SDL_FRect dstRect = {(m_position.x - (width / 2)), (m_position.y - (height / 2)), width, height};
     const bool success = SDL_RenderTexture(renderer, &texture, &m_srcRect, &dstRect);
-    assert(success);
+    if (!success) { throw PF::SDLException("Failed to render texture"); }
 }
 
 void PF::Object::update(Uint64 /*stepMs*/)
