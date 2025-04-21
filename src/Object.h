@@ -21,7 +21,7 @@ class Object
 
     virtual void update(Uint64 stepMs);
     virtual std::shared_ptr<Object> handleKeyboardEvent(SDL_Event* event);
-    virtual bool shouldRemove() const;
+    [[nodiscard]] virtual bool shouldRemove() const;
 
     void render(SDL_Renderer* renderer, const PF::TextureManager& textureManager) const;
 
