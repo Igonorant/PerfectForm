@@ -1,12 +1,12 @@
-#include <exception>
-#include <vector>
 #define SDL_MAIN_USE_CALLBACKS 1 /* use the callbacks instead of main() */
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include <SDL3_image/SDL_image.h>
 
+#include <exception>
 #include <format>
+#include <vector>
 
 #include "Exceptions.h"
 #include "Game.h"
@@ -196,5 +196,6 @@ void SDL_AppQuit(void* appState, SDL_AppResult /*result*/)
         SDL_DestroyRenderer(state->renderer);
         SDL_DestroyWindow(state->window);
         SDL_free(state);
+        SDL_Log("Application quit successfully.");
     }
 }
