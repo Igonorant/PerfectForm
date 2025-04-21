@@ -1,3 +1,4 @@
+#include <exception>
 #include <vector>
 #define SDL_MAIN_USE_CALLBACKS 1 /* use the callbacks instead of main() */
 
@@ -13,6 +14,11 @@
 #define SIMULATION_STEP_RATE_IN_MILLISECONDS 7
 #define SDL_WINDOW_WIDTH 1280
 #define SDL_WINDOW_HEIGHT 720
+
+#define DEFAULT_LOG_EXCEPTION(msg)                                         \
+    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", msg);                       \
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", msg, nullptr); \
+    return SDL_APP_FAILURE;
 
 #define SDL_LOG_EXCEPTION(msg, window)                                    \
     SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", msg);                      \
@@ -80,6 +86,10 @@ SDL_AppResult SDL_AppIterate(void* appState)
     {
         SDL_LOG_EXCEPTION(e.what(), state->window);
     }
+    catch (const std::exception& e)
+    {
+        DEFAULT_LOG_EXCEPTION(e.what());
+    }
     return SDL_APP_CONTINUE;
 }
 
@@ -123,6 +133,10 @@ SDL_AppResult SDL_AppInit(void** appState, int /*argc*/, char* /*argv*/[])
     {
         SDL_LOG_EXCEPTION(e.what(), nullptr);  // window may not be available yet, so using nullptr instead (no parent)
     }
+    catch (const std::exception& e)
+    {
+        DEFAULT_LOG_EXCEPTION(e.what());
+    }
     return SDL_APP_CONTINUE;
 }
 
@@ -165,6 +179,10 @@ SDL_AppResult SDL_AppEvent(void* appState, SDL_Event* event)
     catch (const PF::SDLException& e)
     {
         SDL_LOG_EXCEPTION(e.what(), state->window);
+    }
+    catch (const std::exception& e)
+    {
+        DEFAULT_LOG_EXCEPTION(e.what());
     }
     return SDL_APP_CONTINUE;
 }
