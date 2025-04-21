@@ -1,3 +1,4 @@
+#include <memory>
 #define SDL_MAIN_USE_CALLBACKS 1 /* use the callbacks instead of main() */
 
 #include <SDL3/SDL.h>
@@ -11,7 +12,7 @@
 #include "Exceptions.h"
 #include "Game.h"
 
-#define SIMULATION_STEP_RATE_IN_MILLISECONDS 7
+#define SIMULATION_STEP_RATE_IN_MILLISECONDS 10
 #define SDL_WINDOW_WIDTH 1280
 #define SDL_WINDOW_HEIGHT 720
 
@@ -27,7 +28,7 @@
 
 namespace
 {
-SDL_Joystick* joystick = nullptr;
+SDL_Joystick* g_joystick = nullptr;
 
 struct AppState
 {
@@ -36,7 +37,7 @@ struct AppState
 
     Uint64 lastStep{0};
 
-    PF::Game game;
+    std::unique_ptr<PF::Game> game{nullptr};
 };
 
 struct AppMetadata
@@ -54,14 +55,14 @@ SDL_AppResult SDL_AppIterate(void* appState)
     {
         const Uint64 now = SDL_GetTicks();
 
+        // FIXME: this can become unsafe very easily, we need to ensure lastStep is always less than now.
         // run game logic if we're at or past the time to run it.
         // if we're _really_ behind the time to run it, run it
         // several times.
-        Uint64 stepMs = now - state->lastStep;
-        while (stepMs >= SIMULATION_STEP_RATE_IN_MILLISECONDS)
+        while ((now - state->lastStep) >= SIMULATION_STEP_RATE_IN_MILLISECONDS)
         {
-            stepMs = now - state->lastStep;
-            state->game.update(stepMs);
+            const Uint64 stepMs = now - state->lastStep;
+            state->game->update(stepMs);
 
             // TODO: increment this by any means necessary!
             state->lastStep += SIMULATION_STEP_RATE_IN_MILLISECONDS;
@@ -78,7 +79,7 @@ SDL_AppResult SDL_AppIterate(void* appState)
         }
         if (!SDL_RenderClear(state->renderer)) { throw PF::SDLException("Failed to clear renderer."); }
 
-        state->game.render();  // Render the game objects
+        state->game->render();  // Render the game objects
 
         if (!SDL_RenderPresent(state->renderer)) { throw PF::SDLException("Failed to present renderer."); }
     }
@@ -124,7 +125,7 @@ SDL_AppResult SDL_AppInit(void** appState, int /*argc*/, char* /*argv*/[])
             throw PF::SDLException("Failed to create window and renderer.");
         }
 
-        state->game = PF::Game(state->renderer);
+        state->game = std::make_unique<PF::Game>(state->renderer);
         state->lastStep = SDL_GetTicks();
         *appState = state;
         SDL_Log("Application initialized successfully.");
@@ -149,20 +150,20 @@ SDL_AppResult SDL_AppEvent(void* appState, SDL_Event* event)
         {
             case SDL_EVENT_QUIT: return SDL_APP_SUCCESS;
             case SDL_EVENT_JOYSTICK_ADDED:
-                if (joystick == nullptr)
+                if (g_joystick == nullptr)
                 {
-                    joystick = SDL_OpenJoystick(event->jdevice.which);
-                    if (joystick == nullptr)
+                    g_joystick = SDL_OpenJoystick(event->jdevice.which);
+                    if (g_joystick == nullptr)
                     {
                         throw PF::SDLException(std::format("Failed to open joystick ID {}:", event->jdevice.which));
                     }
                 }
                 break;
             case SDL_EVENT_JOYSTICK_REMOVED:
-                if ((joystick != nullptr) && (SDL_GetJoystickID(joystick) == event->jdevice.which))
+                if ((g_joystick != nullptr) && (SDL_GetJoystickID(g_joystick) == event->jdevice.which))
                 {
-                    SDL_CloseJoystick(joystick);
-                    joystick = nullptr;
+                    SDL_CloseJoystick(g_joystick);
+                    g_joystick = nullptr;
                 }
                 break;
             case SDL_EVENT_JOYSTICK_HAT_MOTION:
@@ -170,7 +171,7 @@ SDL_AppResult SDL_AppEvent(void* appState, SDL_Event* event)
             case SDL_EVENT_KEY_DOWN: [[fallthrough]];
             case SDL_EVENT_KEY_UP:
             {
-                state->game.handleKeyboardEvent(event);
+                state->game->handleKeyboardEvent(event);
                 break;
             }
             default: break;
@@ -189,7 +190,7 @@ SDL_AppResult SDL_AppEvent(void* appState, SDL_Event* event)
 
 void SDL_AppQuit(void* appState, SDL_AppResult /*result*/)
 {
-    if (joystick != nullptr) { SDL_CloseJoystick(joystick); }
+    if (g_joystick != nullptr) { SDL_CloseJoystick(g_joystick); }
     if (appState != nullptr)
     {
         auto* state = static_cast<AppState*>(appState);
