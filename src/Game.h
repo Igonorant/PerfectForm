@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 
 #include <memory>
+#include <vector>
 
 #include "TextureManager.h"
 
@@ -17,7 +18,7 @@ class Player;
 class Game
 {
   public:
-    Game(SDL_Renderer* renderer);
+    explicit Game(SDL_Renderer* renderer);
 
     void update(Uint64 stepMs);
 

@@ -1,5 +1,6 @@
 #include <cassert>
 #include <cstddef>
+#include <memory>
 
 #include "Exceptions.h"
 #include "Object.h"

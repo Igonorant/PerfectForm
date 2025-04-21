@@ -1,9 +1,11 @@
-#include <format>
+#include <vector>
 #define SDL_MAIN_USE_CALLBACKS 1 /* use the callbacks instead of main() */
 
 #include <SDL3/SDL.h>  // IWYU pragma: export
 #include <SDL3/SDL_main.h>
 #include <SDL3_image/SDL_image.h>
+
+#include <format>
 
 #include "Exceptions.h"
 #include "Game.h"
@@ -17,21 +19,31 @@
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", msg, window); \
     return SDL_APP_FAILURE;
 
-static SDL_Joystick* joystick = NULL;
+namespace
+{
+SDL_Joystick* joystick = nullptr;
 
 struct AppState
 {
-    SDL_Window* window;
-    SDL_Renderer* renderer;
+    SDL_Window* window{nullptr};
+    SDL_Renderer* renderer{nullptr};
 
-    Uint64 lastStep;
+    Uint64 lastStep{0};
 
     PF::Game game;
 };
 
-SDL_AppResult SDL_AppIterate(void* as)
+struct AppMetadata
 {
-    AppState* appState = (AppState*)as;
+    const char* key;
+    const char* value;
+};
+
+}  // namespace
+
+SDL_AppResult SDL_AppIterate(void* appState)
+{
+    auto* state = static_cast<AppState*>(appState);
     try
     {
         const Uint64 now = SDL_GetTicks();
@@ -39,45 +51,39 @@ SDL_AppResult SDL_AppIterate(void* as)
         // run game logic if we're at or past the time to run it.
         // if we're _really_ behind the time to run it, run it
         // several times.
-
-        while ((now - appState->lastStep) >= SIMULATION_STEP_RATE_IN_MILLISECONDS)
+        Uint64 stepMs = now - state->lastStep;
+        while (stepMs >= SIMULATION_STEP_RATE_IN_MILLISECONDS)
         {
-            const Uint64 stepMs = now - appState->lastStep;
-            appState->game.update(stepMs);
+            stepMs = now - state->lastStep;
+            state->game.update(stepMs);
 
             // TODO: increment this by any means necessary!
-            appState->lastStep += SIMULATION_STEP_RATE_IN_MILLISECONDS;
+            state->lastStep += SIMULATION_STEP_RATE_IN_MILLISECONDS;
         }
 
         // Clear the renderer with a color
-        SDL_Color clearColor = {255, 230, 190, SDL_ALPHA_OPAQUE};
-        if (!SDL_SetRenderDrawColor(appState->renderer, clearColor.r, clearColor.g, clearColor.b, clearColor.a))
+        const Uint8 clearR = 255;
+        const Uint8 clearG = 230;
+        const Uint8 clearB = 190;
+        SDL_Color clearColor = {clearR, clearG, clearB, SDL_ALPHA_OPAQUE};
+        if (!SDL_SetRenderDrawColor(state->renderer, clearColor.r, clearColor.g, clearColor.b, clearColor.a))
         {
             throw PF::SDLException("Failed to set renderer clear color.");
         }
-        if (!SDL_RenderClear(appState->renderer)) { throw PF::SDLException("Failed to clear renderer."); }
+        if (!SDL_RenderClear(state->renderer)) { throw PF::SDLException("Failed to clear renderer."); }
 
-        appState->game.render();  // Render the game objects
+        state->game.render();  // Render the game objects
 
-        if (!SDL_RenderPresent(appState->renderer)) { throw PF::SDLException("Failed to present renderer."); }
+        if (!SDL_RenderPresent(state->renderer)) { throw PF::SDLException("Failed to present renderer."); }
     }
     catch (const PF::SDLException& e)
     {
-        SDL_LOG_EXCEPTION(e.what(), appState->window);
+        SDL_LOG_EXCEPTION(e.what(), state->window);
     }
     return SDL_APP_CONTINUE;
 }
 
-static const struct
-{
-    const char* key;
-    const char* value;
-} extended_metadata[] = {
-    {SDL_PROP_APP_METADATA_CREATOR_STRING, "Igonorant"},
-    {   SDL_PROP_APP_METADATA_TYPE_STRING,      "game"}
-};
-
-SDL_AppResult SDL_AppInit(void** as, int /*argc*/, char* /*argv*/[])
+SDL_AppResult SDL_AppInit(void** appState, int /*argc*/, char* /*argv*/[])
 {
     try
     {
@@ -85,7 +91,11 @@ SDL_AppResult SDL_AppInit(void** as, int /*argc*/, char* /*argv*/[])
         {
             throw PF::SDLException("Failed to set app metadata.");
         }
-        for (const auto& [key, value] : extended_metadata)
+        const std::vector<AppMetadata> extendedMetadata{
+            {.key = SDL_PROP_APP_METADATA_CREATOR_STRING, .value = "Igonorant"},
+            {   .key = SDL_PROP_APP_METADATA_TYPE_STRING,      .value = "game"}
+        };
+        for (const auto& [key, value] : extendedMetadata)
         {
             if (!SDL_SetAppMetadataProperty(key, value))
             {
@@ -95,19 +105,19 @@ SDL_AppResult SDL_AppInit(void** as, int /*argc*/, char* /*argv*/[])
 
         if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK)) { throw PF::SDLException("Couldn't initialize SDL."); }
 
-        AppState* appState = (AppState*)SDL_calloc(1, sizeof(AppState));
-        if (!appState) { throw PF::SDLException("Failed to allocate memory for AppState."); }
+        auto* state = static_cast<AppState*>(SDL_calloc(1, sizeof(AppState)));
+        if (state == nullptr) { throw PF::SDLException("Failed to allocate memory for AppState."); }
 
-        if (!SDL_CreateWindowAndRenderer("Perfect Form", SDL_WINDOW_WIDTH, SDL_WINDOW_HEIGHT, 0, &appState->window,
-                                         &appState->renderer))
+        if (!SDL_CreateWindowAndRenderer("Perfect Form", SDL_WINDOW_WIDTH, SDL_WINDOW_HEIGHT, 0, &state->window,
+                                         &state->renderer))
         {
             throw PF::SDLException("Failed to create window and renderer.");
         }
 
-        appState->game = PF::Game(appState->renderer);
-        *as = appState;
-
-        appState->lastStep = SDL_GetTicks();
+        state->game = PF::Game(state->renderer);
+        state->lastStep = SDL_GetTicks();
+        *appState = state;
+        SDL_Log("Application initialized successfully.");
     }
     catch (const PF::SDLException& e)
     {
@@ -116,9 +126,9 @@ SDL_AppResult SDL_AppInit(void** as, int /*argc*/, char* /*argv*/[])
     return SDL_APP_CONTINUE;
 }
 
-SDL_AppResult SDL_AppEvent(void* as, SDL_Event* event)
+SDL_AppResult SDL_AppEvent(void* appState, SDL_Event* event)
 {
-    AppState* appState = (AppState*)as;
+    auto* state = static_cast<AppState*>(appState);
     try
     {
         switch (event->type)
@@ -128,7 +138,7 @@ SDL_AppResult SDL_AppEvent(void* as, SDL_Event* event)
                 if (joystick == nullptr)
                 {
                     joystick = SDL_OpenJoystick(event->jdevice.which);
-                    if (!joystick)
+                    if (joystick == nullptr)
                     {
                         throw PF::SDLException(std::format("Failed to open joystick ID {}:", event->jdevice.which));
                     }
@@ -146,7 +156,7 @@ SDL_AppResult SDL_AppEvent(void* as, SDL_Event* event)
             case SDL_EVENT_KEY_DOWN: [[fallthrough]];
             case SDL_EVENT_KEY_UP:
             {
-                appState->game.handleKeyboardEvent(event);
+                state->game.handleKeyboardEvent(event);
                 break;
             }
             default: break;
@@ -154,19 +164,19 @@ SDL_AppResult SDL_AppEvent(void* as, SDL_Event* event)
     }
     catch (const PF::SDLException& e)
     {
-        SDL_LOG_EXCEPTION(e.what(), appState->window);
+        SDL_LOG_EXCEPTION(e.what(), state->window);
     }
     return SDL_APP_CONTINUE;
 }
 
-void SDL_AppQuit(void* as, SDL_AppResult /*result*/)
+void SDL_AppQuit(void* appState, SDL_AppResult /*result*/)
 {
-    if (joystick) { SDL_CloseJoystick(joystick); }
-    if (as != NULL)
+    if (joystick != nullptr) { SDL_CloseJoystick(joystick); }
+    if (appState != nullptr)
     {
-        AppState* appState = (AppState*)as;
-        SDL_DestroyRenderer(appState->renderer);
-        SDL_DestroyWindow(appState->window);
-        SDL_free(appState);
+        auto* state = static_cast<AppState*>(appState);
+        SDL_DestroyRenderer(state->renderer);
+        SDL_DestroyWindow(state->window);
+        SDL_free(state);
     }
 }

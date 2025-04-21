@@ -1,6 +1,10 @@
-#include <math.h>
+#include <cmath>
+#include <cstddef>
+#include <memory>
 
+#include "Object.h"
 #include "Player.h"
+
 
 constexpr float ANGLE_INCREMENT = 0.0007F;
 constexpr float ATTACK_ANGLE_INCREMENT = 0.005F;

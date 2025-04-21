@@ -1,25 +1,24 @@
 #include <cassert>
+#include <cstddef>
 #include <filesystem>
+#include <format>
 #include <stdexcept>
+#include <string>
+#include <string_view>
 
+#include "Exceptions.h"
 #include "TextureManager.h"
 
 PF::Texture::Texture(SDL_Renderer* renderer, std::string_view filePath)
 {
     std::filesystem::path canonicalPath = std::filesystem::canonical(filePath);
     SDL_Surface* fileSurface = IMG_Load(canonicalPath.string().c_str());
-    if (!fileSurface)
-    {
-        const auto errorMsg =
-            std::string("Couldn't load surface from file: ") + std::string(filePath) + "\n  Error: " + SDL_GetError();
-        throw std::runtime_error(errorMsg);
-    }
+    if (fileSurface == nullptr) { throw PF::SDLException(std::format("Couldn't load image file: {}", filePath)); }
+
     m_texture = SDL_CreateTextureFromSurface(renderer, fileSurface);
-    if (!m_texture)
+    if (m_texture == nullptr)
     {
-        const auto errorMsg = std::string("Couldn't create texture from surface: ") + std::string(filePath) +
-                              "\n  Error: " + SDL_GetError();
-        throw std::runtime_error(errorMsg);
+        throw PF::SDLException(std::format("Couldn't create texture from surface: {}", filePath));
     }
     SDL_DestroySurface(fileSurface);  // done with this, the texture has a copy of the pixels now.
 }
@@ -39,7 +38,7 @@ PF::TextureManager::TextureManager(SDL_Renderer* renderer): m_renderer(renderer)
 std::size_t PF::TextureManager::addTexture(std::string_view filePath)
 {
     m_textures.emplace_back(m_renderer, filePath);
-    SDL_Log("Texture added from file: %s\n", filePath.data());
+    SDL_Log("Texture added from file: %s\n", std::string{filePath}.c_str());
     return m_textures.size() - 1;  // Return the index of the added texture
 }
 

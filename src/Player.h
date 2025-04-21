@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 
 #include <cstddef>
+#include <memory>
 
 #include "Object.h"
 
@@ -17,10 +18,10 @@ class Player : public Object
 
     void update(Uint64 stepMs) override;
 
-    std::shared_ptr<PF::Object> handleKeyboardEvent(SDL_Event* event) override;
+    [[nodiscard]] std::shared_ptr<PF::Object> handleKeyboardEvent(SDL_Event* event) override;
 
   private:
-    std::shared_ptr<PF::Object> spawnAttack() const;
+    [[nodiscard]] std::shared_ptr<PF::Object> spawnAttack() const;
 
   private:
     float m_angle = 0.0F;                  // Angle for circular motion

@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 
+#include <cstddef>
 #include <string_view>
 #include <vector>
 
@@ -27,7 +28,7 @@ class Texture
      */
     Texture(SDL_Renderer* renderer, std::string_view filePath);
 
-    SDL_Texture& get() const;
+    [[nodiscard]] SDL_Texture& get() const;
     SDL_Texture& operator->() const;
     SDL_Texture& operator*() const;
 
@@ -50,7 +51,7 @@ class TextureManager
      * @brief Constructs a TextureManager object.
      * @param renderer The SDL_Renderer used to create textures.
      */
-    TextureManager(SDL_Renderer* renderer);
+    explicit TextureManager(SDL_Renderer* renderer);
 
     /**
      * @brief Adds a texture to the manager by loading it from a file.
@@ -66,7 +67,7 @@ class TextureManager
      * @return A reference to the texture at the specified index.
      * @throws std::out_of_range if the index is invalid.
      */
-    const Texture& getTexture(std::size_t index) const;
+    [[nodiscard]] const Texture& getTexture(std::size_t index) const;
 
   private:
     SDL_Renderer* m_renderer;

@@ -1,4 +1,6 @@
-#include <algorithm>
+#include <iterator>
+#include <memory>
+#include <vector>
 
 #include "Game.h"
 #include "Object.h"
@@ -12,11 +14,24 @@ PF::Game::Game(SDL_Renderer* renderer): m_renderer(renderer), m_textureManager(r
 
 void PF::Game::initializePlayer()
 {
-    SDL_FRect srcRect = {0, 0, 64, 64};
-    SDL_FPoint position = {1280 / 2.0F, 720 / 2.0F};
-    float size = 1.0F;
+    // Texture source rectangle
+    const float playerSrcWidth = 64.0F;
+    const float playerSrcHeight = 64.0F;
+    SDL_FRect srcRect = {0, 0, playerSrcWidth, playerSrcHeight};
+
+    // Starting position
+    const float playerStartX = 1280 / 2.0F;
+    const float playerStartY = 720 / 2.0F;
+    SDL_FPoint position = {playerStartX, playerStartY};
+
+    // Starting size
+    float startSize = 1.0F;
+
+    // Load texture
     const auto textureIdx = m_textureManager.addTexture("../../assets/BaseCell_64x64.png");
-    m_player = std::make_shared<PF::Player>(textureIdx, srcRect, position, size);
+
+    // Create player object
+    m_player = std::make_shared<PF::Player>(textureIdx, srcRect, position, startSize);
     m_objects.emplace_back(m_player);
 }
 
