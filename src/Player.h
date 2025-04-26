@@ -46,8 +46,9 @@ class Player : public Object
 
     bool m_needToSpawnAttack = false;  // Flag to indicate if an attack should be spawned
 
-    float m_angle = 0.0F;                  // Angle for circular motion
-    SDL_FPoint m_velocity = {0.0F, 0.0F};  // Velocity vector for movement
+    float m_angle = 0.0F;                      // Angle for circular motion
+    SDL_FPoint m_velocity = {0.0F, 0.0F};      // Velocity vector for movement
+    SDL_FPoint m_lastVelocity = {0.0F, 0.0F};  // Last velocity vector for movement
 };
 
 class Attack : public Object

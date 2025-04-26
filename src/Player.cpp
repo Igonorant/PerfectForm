@@ -20,6 +20,7 @@ constexpr float POSITION_OFFSET = 0.5F;
 constexpr float ATTACK_SIZE_OSCILLATION = 0.005F;
 constexpr float ATTACK_SIZE_DECAY = 0.00005F;
 constexpr float MIN_ATTACK_SIZE = 0.02F;
+constexpr float DIAGONAL_FACTOR = 0.7071F;  // 1/sqrt(2) for diagonal movement
 
 PF::Player::Player(std::size_t textureIdx, SDL_FRect srcRect, SDL_FPoint position, float size)
     : Object(textureIdx, srcRect, position, size)
@@ -33,6 +34,13 @@ void PF::Player::update(Uint64 stepMs)
     {
         case State::IDLE:
         {
+            const float velocitySum = (m_velocity.x * m_velocity.x) + (m_velocity.y * m_velocity.y);
+            if (velocitySum >= VELOCITY)
+            {
+                // Store the last velocity before stopping
+                m_lastVelocity = m_velocity;
+            }
+
             m_velocity.x = 0.0F;
             m_velocity.y = 0.0F;
             break;
@@ -63,26 +71,26 @@ void PF::Player::update(Uint64 stepMs)
         }
         case State::MOVING_UP_LEFT:
         {
-            m_velocity.x = -VELOCITY * 0.7071F;  // Diagonal movement
-            m_velocity.y = -VELOCITY * 0.7071F;  // Diagonal movement
+            m_velocity.x = -VELOCITY * DIAGONAL_FACTOR;  // Diagonal movement
+            m_velocity.y = -VELOCITY * DIAGONAL_FACTOR;  // Diagonal movement
             break;
         }
         case State::MOVING_UP_RIGHT:
         {
-            m_velocity.x = VELOCITY * 0.7071F;   // Diagonal movement
-            m_velocity.y = -VELOCITY * 0.7071F;  // Diagonal movement
+            m_velocity.x = VELOCITY * DIAGONAL_FACTOR;   // Diagonal movement
+            m_velocity.y = -VELOCITY * DIAGONAL_FACTOR;  // Diagonal movement
             break;
         }
         case State::MOVING_DOWN_LEFT:
         {
-            m_velocity.x = -VELOCITY * 0.7071F;  // Diagonal movement
-            m_velocity.y = VELOCITY * 0.7071F;   // Diagonal movement
+            m_velocity.x = -VELOCITY * DIAGONAL_FACTOR;  // Diagonal movement
+            m_velocity.y = VELOCITY * DIAGONAL_FACTOR;   // Diagonal movement
             break;
         }
         case State::MOVING_DOWN_RIGHT:
         {
-            m_velocity.x = VELOCITY * 0.7071F;  // Diagonal movement
-            m_velocity.y = VELOCITY * 0.7071F;  // Diagonal movement
+            m_velocity.x = VELOCITY * DIAGONAL_FACTOR;  // Diagonal movement
+            m_velocity.y = VELOCITY * DIAGONAL_FACTOR;  // Diagonal movement
             break;
         }
     }
@@ -324,15 +332,15 @@ std::shared_ptr<PF::Object> PF::Player::spawnChildObject()
 std::shared_ptr<PF::Object> PF::Player::spawnAttack() const
 {
     const float velocitySum = (m_velocity.x * m_velocity.x) + (m_velocity.y * m_velocity.y);
-    if (velocitySum < MIN_VELOCITY_THRESHOLD) { return {}; }  // No movement, no attack
+    SDL_FPoint attackVelocity = m_velocity;
+    if (velocitySum < MIN_VELOCITY_THRESHOLD) { attackVelocity = m_lastVelocity; }
 
     float size = m_size * ATTACK_SIZE_FACTOR;
     auto attack = std::make_shared<PF::Attack>(m_textureIdx, m_srcRect, m_position, size);
 
-    SDL_FPoint velocity = m_velocity;
-    velocity.x *= ATTACK_VELOCITY_MULTIPLIER;
-    velocity.y *= ATTACK_VELOCITY_MULTIPLIER;
-    attack->setVelocity(velocity);  // Set the velocity of the attack
+    attackVelocity.x *= ATTACK_VELOCITY_MULTIPLIER;
+    attackVelocity.y *= ATTACK_VELOCITY_MULTIPLIER;
+    attack->setVelocity(attackVelocity);  // Set the velocity of the attack
     return attack;
 }
 
