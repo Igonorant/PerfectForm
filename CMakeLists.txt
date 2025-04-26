@@ -26,6 +26,8 @@ PRIVATE
     src/Exceptions.h
     src/Game.cpp
     src/Game.h
+    src/GlobalDefinitions.cpp
+    src/GlobalDefinitions.h
     src/Object.cpp
     src/Object.h
     src/Player.cpp

@@ -11,10 +11,7 @@
 
 #include "Exceptions.h"
 #include "Game.h"
-
-#define SIMULATION_STEP_RATE_IN_MILLISECONDS 10
-#define SDL_WINDOW_WIDTH 1280
-#define SDL_WINDOW_HEIGHT 720
+#include "GlobalDefinitions.h"
 
 namespace
 {
@@ -57,21 +54,21 @@ SDL_AppResult SDL_AppIterate(void* appState)
         // run game logic if we're at or past the time to run it.
         // if we're _really_ behind the time to run it, run it
         // several times.
-        while ((now - state->lastStep) >= SIMULATION_STEP_RATE_IN_MILLISECONDS)
+        while ((now - state->lastStep) >= PF::Global::Model::SIMULATION_STEP_RATE_MS)
         {
             const Uint64 stepMs = now - state->lastStep;
             state->game->update(stepMs);
 
             // TODO: increment this by any means necessary!
-            state->lastStep += SIMULATION_STEP_RATE_IN_MILLISECONDS;
+            state->lastStep += PF::Global::Model::SIMULATION_STEP_RATE_MS;
         }
 
         // Clear the renderer with a color
-        const Uint8 clearR = 255;
-        const Uint8 clearG = 230;
-        const Uint8 clearB = 190;
-        SDL_Color clearColor = {clearR, clearG, clearB, SDL_ALPHA_OPAQUE};
-        if (!SDL_SetRenderDrawColor(state->renderer, clearColor.r, clearColor.g, clearColor.b, clearColor.a))
+        if (!SDL_SetRenderDrawColorFloat(state->renderer,
+                                         PF::Global::Colors::BLACK.r,
+                                         PF::Global::Colors::BLACK.g,
+                                         PF::Global::Colors::BLACK.b,
+                                         PF::Global::Colors::BLACK.a))
         {
             throw PF::SDLException("Failed to set renderer clear color.");
         }
@@ -96,14 +93,16 @@ namespace
 {
 void SetAppMetadata()
 {
-    if (!SDL_SetAppMetadata("Perfect Form", "0.1", "com.igonorant.perfectform"))
-    {
-        throw PF::SDLException("Failed to set app metadata.");
-    }
     const std::vector<AppMetadata> extendedMetadata{
         {.key = SDL_PROP_APP_METADATA_CREATOR_STRING, .value = "Igonorant"},
         {   .key = SDL_PROP_APP_METADATA_TYPE_STRING,      .value = "game"}
     };
+
+    if (!SDL_SetAppMetadata("Perfect Form", "0.1", "com.igonorant.perfectform"))
+    {
+        throw PF::SDLException("Failed to set app metadata.");
+    }
+
     for (const auto& [key, value] : extendedMetadata)
     {
         if (!SDL_SetAppMetadataProperty(key, value))
@@ -120,11 +119,21 @@ void InitializeSDL()
 
 void InitializeWindowAndRenderer(std::unique_ptr<AppState>& appState)
 {
-    if (!SDL_CreateWindowAndRenderer("Perfect Form", SDL_WINDOW_WIDTH, SDL_WINDOW_HEIGHT, 0, &appState->window,
+    if (!SDL_CreateWindowAndRenderer("Perfect Form",
+                                     PF::Global::Window::DEFAULT_WIDTH,
+                                     PF::Global::Window::DEFAULT_HEIGHT,
+                                     0,
+                                     &appState->window,
                                      &appState->renderer))
     {
         throw PF::SDLException("Failed to create window and renderer.");
     }
+
+    // Ensuring the global variables are updated to the actual window size.
+    int width = PF::Global::Window::DEFAULT_WIDTH;
+    int height = PF::Global::Window::DEFAULT_HEIGHT;
+    SDL_GetWindowSize(appState->window, &width, &height);
+    PF::Global::Window::SetDimensions({width, height});
 }
 }  // namespace
 
