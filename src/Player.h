@@ -58,6 +58,8 @@ class Attack : public Object
 
     void update(Uint64 stepMs) override;
 
+    void render(SDL_Renderer* renderer, const PF::TextureManager& textureManager) const override;
+
     void setVelocity(SDL_FPoint velocity);
 
     [[nodiscard]]

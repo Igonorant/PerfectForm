@@ -3,8 +3,10 @@
 #include <memory>
 
 #include "Enums.h"
+#include "Exceptions.h"
 #include "Object.h"
 #include "Player.h"
+#include "TextureManager.h"
 
 constexpr float ANGLE_INCREMENT = 0.0007F;
 constexpr float ATTACK_ANGLE_INCREMENT = 0.005F;
@@ -338,8 +340,8 @@ std::shared_ptr<PF::Object> PF::Player::spawnAttack() const
     float size = m_size * ATTACK_SIZE_FACTOR;
     auto attack = std::make_shared<PF::Attack>(m_textureIdx, m_srcRect, m_position, size);
 
-    attackVelocity.x *= ATTACK_VELOCITY_MULTIPLIER;
-    attackVelocity.y *= ATTACK_VELOCITY_MULTIPLIER;
+    attackVelocity.x *= ATTACK_VELOCITY_MULTIPLIER * (0.6F + SDL_randf() * 0.4F);  // Randomize attack velocity
+    attackVelocity.y *= ATTACK_VELOCITY_MULTIPLIER * (0.6F + SDL_randf() * 0.4F);
     attack->setVelocity(attackVelocity);  // Set the velocity of the attack
     return attack;
 }
@@ -351,7 +353,7 @@ PF::Attack::Attack(std::size_t textureIdx, SDL_FRect srcRect, SDL_FPoint positio
 
 void PF::Attack::update(Uint64 stepMs)
 {
-    m_angle += static_cast<float>(stepMs) * ATTACK_ANGLE_INCREMENT;
+    m_angle += static_cast<float>(stepMs) * ATTACK_ANGLE_INCREMENT * SDL_randf();  // Randomize angle increment
     float sinAngle = sinf(m_angle);
     float cosAngle = cosf(COS_ANGLE_MULTIPLIER * m_angle);
 
@@ -374,3 +376,15 @@ void PF::Attack::update(Uint64 stepMs)
 void PF::Attack::setVelocity(SDL_FPoint velocity) { m_velocity = velocity; }
 
 bool PF::Attack::shouldRemove() const { return m_size < MIN_ATTACK_SIZE; }
+
+void PF::Attack::render(SDL_Renderer* renderer, const PF::TextureManager& textureManager) const
+{
+    auto& texture = textureManager.getTexture(m_textureIdx).get();
+    const auto width = m_srcRect.w * m_size;
+    const auto height = m_srcRect.h * m_size;
+    SDL_FRect dstRect = {(m_position.x - (width / 2)), (m_position.y - (height / 2)), width, height};
+    const bool success =
+        SDL_RenderTextureRotated(renderer, &texture, &m_srcRect, &dstRect, m_angle * 180.0F, nullptr, SDL_FLIP_NONE);
+    // SDL_RenderTexture(renderer, &texture, &m_srcRect, &dstRect);
+    if (!success) { throw PF::SDLException("Failed to render texture"); }
+}

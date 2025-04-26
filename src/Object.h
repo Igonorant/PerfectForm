@@ -37,7 +37,7 @@ class Object
     [[nodiscard]]
     float getSize() const;
 
-    void render(SDL_Renderer* renderer, const PF::TextureManager& textureManager) const;
+    virtual void render(SDL_Renderer* renderer, const PF::TextureManager& textureManager) const;
 
   protected:
     std::size_t m_textureIdx;
