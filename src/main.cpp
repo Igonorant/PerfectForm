@@ -16,18 +16,16 @@
 #define SDL_WINDOW_WIDTH 1280
 #define SDL_WINDOW_HEIGHT 720
 
-#define DEFAULT_LOG_EXCEPTION(msg)                                         \
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", msg);                       \
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", msg, nullptr); \
-    return SDL_APP_FAILURE;
-
-#define SDL_LOG_EXCEPTION(msg, window)                                    \
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", msg);                      \
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", msg, window); \
-    return SDL_APP_FAILURE;
-
 namespace
 {
+[[nodiscard("Exception being handled and returning app failure")]]
+SDL_AppResult LogException(const char* msg, SDL_Window* window = nullptr)
+{
+    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", msg);
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", msg, window);
+    return SDL_APP_FAILURE;
+}
+
 struct AppState
 {
     SDL_Window* window{nullptr};
@@ -85,45 +83,62 @@ SDL_AppResult SDL_AppIterate(void* appState)
     }
     catch (const PF::SDLException& e)
     {
-        SDL_LOG_EXCEPTION(e.what(), state->window);
+        return LogException(e.what(), state->window);
     }
     catch (const std::exception& e)
     {
-        DEFAULT_LOG_EXCEPTION(e.what());
+        return LogException(e.what());
     }
     return SDL_APP_CONTINUE;
 }
+
+namespace
+{
+void SetAppMetadata()
+{
+    if (!SDL_SetAppMetadata("Perfect Form", "0.1", "com.igonorant.perfectform"))
+    {
+        throw PF::SDLException("Failed to set app metadata.");
+    }
+    const std::vector<AppMetadata> extendedMetadata{
+        {.key = SDL_PROP_APP_METADATA_CREATOR_STRING, .value = "Igonorant"},
+        {   .key = SDL_PROP_APP_METADATA_TYPE_STRING,      .value = "game"}
+    };
+    for (const auto& [key, value] : extendedMetadata)
+    {
+        if (!SDL_SetAppMetadataProperty(key, value))
+        {
+            throw PF::SDLException(std::format("Failed to set app metadata property: {} = {}", key, value));
+        }
+    }
+}
+
+void InitializeSDL()
+{
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS)) { throw PF::SDLException("Couldn't initialize SDL."); }
+}
+
+void InitializeWindowAndRenderer(std::unique_ptr<AppState>& appState)
+{
+    if (!SDL_CreateWindowAndRenderer("Perfect Form", SDL_WINDOW_WIDTH, SDL_WINDOW_HEIGHT, 0, &appState->window,
+                                     &appState->renderer))
+    {
+        throw PF::SDLException("Failed to create window and renderer.");
+    }
+}
+}  // namespace
 
 SDL_AppResult SDL_AppInit(void** appState, int /*argc*/, char* /*argv*/[])
 {
     try
     {
-        if (!SDL_SetAppMetadata("Perfect Form", "0.1", "com.igonorant.perfectform"))
-        {
-            throw PF::SDLException("Failed to set app metadata.");
-        }
-        const std::vector<AppMetadata> extendedMetadata{
-            {.key = SDL_PROP_APP_METADATA_CREATOR_STRING, .value = "Igonorant"},
-            {   .key = SDL_PROP_APP_METADATA_TYPE_STRING,      .value = "game"}
-        };
-        for (const auto& [key, value] : extendedMetadata)
-        {
-            if (!SDL_SetAppMetadataProperty(key, value))
-            {
-                throw PF::SDLException(std::format("Failed to set app metadata property: {} = {}", key, value));
-            }
-        }
-
-        if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS)) { throw PF::SDLException("Couldn't initialize SDL."); }
+        SetAppMetadata();
+        InitializeSDL();
 
         g_appState = std::make_unique<AppState>();
         if (g_appState == nullptr) { throw PF::SDLException("Failed to allocate memory for AppState."); }
 
-        if (!SDL_CreateWindowAndRenderer("Perfect Form", SDL_WINDOW_WIDTH, SDL_WINDOW_HEIGHT, 0, &g_appState->window,
-                                         &g_appState->renderer))
-        {
-            throw PF::SDLException("Failed to create window and renderer.");
-        }
+        InitializeWindowAndRenderer(g_appState);
 
         g_appState->game = std::make_unique<PF::Game>(g_appState->renderer);
         g_appState->lastStep = SDL_GetTicks();
@@ -132,11 +147,12 @@ SDL_AppResult SDL_AppInit(void** appState, int /*argc*/, char* /*argv*/[])
     }
     catch (const PF::SDLException& e)
     {
-        SDL_LOG_EXCEPTION(e.what(), nullptr);  // window may not be available yet, so using nullptr instead (no parent)
+        return LogException(e.what(),
+                            nullptr);  // window may not be available yet, so using nullptr instead (no parent)
     }
     catch (const std::exception& e)
     {
-        DEFAULT_LOG_EXCEPTION(e.what());
+        return LogException(e.what());
     }
     return SDL_APP_CONTINUE;
 }
@@ -160,11 +176,11 @@ SDL_AppResult SDL_AppEvent(void* appState, SDL_Event* event)
     }
     catch (const PF::SDLException& e)
     {
-        SDL_LOG_EXCEPTION(e.what(), state->window);
+        return LogException(e.what(), state->window);
     }
     catch (const std::exception& e)
     {
-        DEFAULT_LOG_EXCEPTION(e.what());
+        return LogException(e.what());
     }
     return SDL_APP_CONTINUE;
 }
