@@ -40,6 +40,8 @@ struct AppState
     std::unique_ptr<PF::Game> game{nullptr};
 };
 
+std::unique_ptr<AppState> g_appState{nullptr};
+
 struct AppMetadata
 {
     const char* key;
@@ -116,18 +118,20 @@ SDL_AppResult SDL_AppInit(void** appState, int /*argc*/, char* /*argv*/[])
 
         if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK)) { throw PF::SDLException("Couldn't initialize SDL."); }
 
-        auto* state = static_cast<AppState*>(SDL_calloc(1, sizeof(AppState)));
-        if (state == nullptr) { throw PF::SDLException("Failed to allocate memory for AppState."); }
+        g_appState = std::make_unique<AppState>();
+        if (g_appState == nullptr) { throw PF::SDLException("Failed to allocate memory for AppState."); }
+        // auto* state = static_cast<AppState*>(SDL_calloc(1, sizeof(AppState)));
+        if (g_appState == nullptr) { throw PF::SDLException("Failed to allocate memory for AppState."); }
 
-        if (!SDL_CreateWindowAndRenderer("Perfect Form", SDL_WINDOW_WIDTH, SDL_WINDOW_HEIGHT, 0, &state->window,
-                                         &state->renderer))
+        if (!SDL_CreateWindowAndRenderer("Perfect Form", SDL_WINDOW_WIDTH, SDL_WINDOW_HEIGHT, 0, &g_appState->window,
+                                         &g_appState->renderer))
         {
             throw PF::SDLException("Failed to create window and renderer.");
         }
 
-        state->game = std::make_unique<PF::Game>(state->renderer);
-        state->lastStep = SDL_GetTicks();
-        *appState = state;
+        g_appState->game = std::make_unique<PF::Game>(g_appState->renderer);
+        g_appState->lastStep = SDL_GetTicks();
+        *appState = g_appState.get();
         SDL_Log("Application initialized successfully.");
     }
     catch (const PF::SDLException& e)
@@ -196,7 +200,6 @@ void SDL_AppQuit(void* appState, SDL_AppResult /*result*/)
         auto* state = static_cast<AppState*>(appState);
         SDL_DestroyRenderer(state->renderer);
         SDL_DestroyWindow(state->window);
-        SDL_free(state);
-        SDL_Log("Application quit successfully.");
     }
+    SDL_Log("Application quit successfully.");
 }
