@@ -5,6 +5,8 @@
 #include <cstddef>
 #include <memory>
 
+#include "Enums.h"
+
 namespace PF
 {
 class TextureManager;
@@ -20,8 +22,20 @@ class Object
     virtual ~Object() = default;
 
     virtual void update(Uint64 stepMs);
-    virtual std::shared_ptr<Object> handleKeyboardEvent(SDL_Event* event);
-    [[nodiscard]] virtual bool shouldRemove() const;
+    virtual void handleEvent(PF::PlayerIntention playerIntention);
+    [[nodiscard]]
+    virtual bool shouldRemove() const;
+    [[nodiscard]]
+    virtual std::shared_ptr<Object> spawnChildObject();
+
+    [[nodiscard]]
+    std::size_t getTextureIdx() const;
+    [[nodiscard]]
+    SDL_FRect getSrcRect() const;
+    [[nodiscard]]
+    SDL_FPoint getPosition() const;
+    [[nodiscard]]
+    float getSize() const;
 
     void render(SDL_Renderer* renderer, const PF::TextureManager& textureManager) const;
 

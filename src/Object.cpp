@@ -28,11 +28,17 @@ void PF::Object::update(Uint64 /*stepMs*/)
     assert(0 && "update() method should be overridden in derived classes.");
 }
 
-std::shared_ptr<PF::Object> PF::Object::handleKeyboardEvent(SDL_Event* /*event*/)
+void PF::Object::handleEvent(PF::PlayerIntention /*playerIntention*/)
 {
     // Default implementation does nothing. Derived classes can override this method to provide specific behavior.
     // For example, you might want to handle keyboard input for controlling the object or triggering actions.
-    return {};
+}
+
+std::shared_ptr<PF::Object> PF::Object::spawnChildObject()
+{
+    // Default implementation returns nullptr. Derived classes can override this method to provide specific spawning
+    // logic.
+    return nullptr;
 }
 
 bool PF::Object::shouldRemove() const

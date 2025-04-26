@@ -22,7 +22,7 @@ class Scene
     virtual void update(Uint64 stepMs) = 0;
 
     // TODO: update this to return the next scene enum when needed
-    virtual void handleKeyboardEvent(SDL_Event* event) = 0;
+    virtual void handleEvent(SDL_Event* event) = 0;
 
     virtual void render() const = 0;
 

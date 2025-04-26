@@ -22,6 +22,8 @@ add_executable(perfectform)
 target_sources(perfectform
 PRIVATE
     src/main.cpp
+    src/Enums.cpp
+    src/Enums.h
     src/Exceptions.cpp
     src/Exceptions.h
     src/Game.cpp

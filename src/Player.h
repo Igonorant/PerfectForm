@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <memory>
 
+#include "Enums.h"
 #include "Object.h"
 
 namespace PF
@@ -18,12 +19,18 @@ class Player : public Object
 
     void update(Uint64 stepMs) override;
 
-    [[nodiscard]] std::shared_ptr<PF::Object> handleKeyboardEvent(SDL_Event* event) override;
+    void handleEvent(PF::PlayerIntention playerIntention) override;
+
+    [[nodiscard]]
+    std::shared_ptr<Object> spawnChildObject() override;
 
   private:
-    [[nodiscard]] std::shared_ptr<PF::Object> spawnAttack() const;
+    [[nodiscard]]
+    std::shared_ptr<PF::Object> spawnAttack() const;
 
   private:
+    bool m_needToSpawnAttack = false;  // Flag to indicate if an attack should be spawned
+
     float m_angle = 0.0F;                  // Angle for circular motion
     SDL_FPoint m_velocity = {0.0F, 0.0F};  // Velocity vector for movement
 };
@@ -37,7 +44,8 @@ class Attack : public Object
 
     void setVelocity(SDL_FPoint velocity);
 
-    [[nodiscard]] bool shouldRemove() const override;
+    [[nodiscard]]
+    bool shouldRemove() const override;
 
   private:
     float m_angle = 0.0F;  // Angle for circular motion

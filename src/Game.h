@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 
+#include "Enums.h"
 #include "TextureManager.h"
 
 namespace PF
@@ -22,7 +23,7 @@ class Game
 
     void update(Uint64 stepMs);
 
-    void handleKeyboardEvent(SDL_Event* event);
+    void handleEvent(SDL_Event* event);
 
     void render() const;
 
@@ -31,6 +32,8 @@ class Game
 
   private:
     void initializePlayer();  // Initialize player object
+
+    static PF::PlayerIntention getPlayerIntention(SDL_Event* event);  // Get player intention from event
 
   private:
     SDL_Renderer* m_renderer = nullptr;              // Pointer to the SDL renderer

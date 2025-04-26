@@ -2,6 +2,7 @@
 #include <memory>
 #include <vector>
 
+#include "Enums.h"
 #include "Game.h"
 #include "Object.h"
 #include "Player.h"
@@ -37,40 +38,83 @@ void PF::Game::initializePlayer()
 
 void PF::Game::update(Uint64 stepMs)
 {
+    // Update all game objects
     for (auto& object : m_objects) { object->update(stepMs); }
-    std::erase_if(m_objects, [](const auto& object) { return object->shouldRemove(); });
-}
 
-void PF::Game::handleKeyboardEvent(SDL_Event* event)
-{
+    // Remove objects that should be removed after updating
+    std::erase_if(m_objects, [](const auto& object) { return object->shouldRemove(); });
+
+    // Spawn new objects based on the current objects
     std::vector<std::shared_ptr<PF::Object>> newObjects;
     for (auto& object : m_objects)
     {
-        auto newObject = object->handleKeyboardEvent(event);
+        auto newObject = object->spawnChildObject();
         if (newObject) { newObjects.emplace_back(newObject); }
     }
-    m_objects.insert(m_objects.end(), std::make_move_iterator(newObjects.begin()),
-                     std::make_move_iterator(newObjects.end()));
+    m_objects.insert(
+        m_objects.end(), std::make_move_iterator(newObjects.begin()), std::make_move_iterator(newObjects.end()));
+}
 
-    switch (event->type)
-    {
-        case SDL_EVENT_KEY_DOWN:
-        {
-            SDL_Log("Key down event detected.");
-            break;
-        }
-        case SDL_EVENT_KEY_UP:
-        {
-            SDL_Log("Key up event detected.");
-            break;
-        }
-        default: break;
-    }
+void PF::Game::handleEvent(SDL_Event* event)
+{
+    const auto playerIntention = getPlayerIntention(event);
+
+    for (auto& object : m_objects) { object->handleEvent(playerIntention); }
 }
 
 void PF::Game::render() const
 {
     for (const auto& object : m_objects) { object->render(m_renderer, m_textureManager); }
+}
+
+namespace
+{
+void LogIntentionFromEvent(SDL_Event* event, const PF::PlayerIntention playerIntention)
+{
+    // Log the player intention and the event type
+    SDL_Log("Player intention: %s - from SDL_Event: %s | 0x%x",
+            PF::toString(playerIntention),
+            SDL_GetKeyName(event->key.key),
+            event->type);
+}
+}  // namespace
+
+PF::PlayerIntention PF::Game::getPlayerIntention(SDL_Event* event)
+{
+    PF::PlayerIntention playerIntention = PF::PlayerIntention::NONE;
+    switch (event->type)
+    {
+        case SDL_EVENT_KEY_DOWN:
+        {
+            switch (event->key.key)
+            {
+                case SDLK_UP: playerIntention = PF::PlayerIntention::MOVE_UP; break;
+                case SDLK_DOWN: playerIntention = PF::PlayerIntention::MOVE_DOWN; break;
+                case SDLK_LEFT: playerIntention = PF::PlayerIntention::MOVE_LEFT; break;
+                case SDLK_RIGHT: playerIntention = PF::PlayerIntention::MOVE_RIGHT; break;
+                case SDLK_Q: playerIntention = PF::PlayerIntention::ATTACK; break;
+                default: break;
+            }
+            LogIntentionFromEvent(event, playerIntention);
+            break;
+        }
+        case SDL_EVENT_KEY_UP:
+        {
+            switch (event->key.key)
+            {
+                case SDLK_UP: playerIntention = PF::PlayerIntention::MOVE_STOP_UP; break;
+                case SDLK_DOWN: playerIntention = PF::PlayerIntention::MOVE_STOP_DOWN; break;
+                case SDLK_LEFT: playerIntention = PF::PlayerIntention::MOVE_STOP_LEFT; break;
+                case SDLK_RIGHT: playerIntention = PF::PlayerIntention::MOVE_STOP_RIGHT; break;
+                default: break;
+            }
+            LogIntentionFromEvent(event, playerIntention);
+            break;
+        }
+        default: break;
+    }
+
+    return playerIntention;
 }
 
 PF::TextureManager& PF::Game::getTextureManager() { return m_textureManager; }

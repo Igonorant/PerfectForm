@@ -2,9 +2,9 @@
 #include <cstddef>
 #include <memory>
 
+#include "Enums.h"
 #include "Object.h"
 #include "Player.h"
-
 
 constexpr float ANGLE_INCREMENT = 0.0007F;
 constexpr float ATTACK_ANGLE_INCREMENT = 0.005F;
@@ -34,65 +34,28 @@ void PF::Player::update(Uint64 stepMs)
     m_size = 1.0F + (sinf(m_angle * SCALE_ANGLE_MULTIPLIER) * SCALE_FACTOR);  // Scale between 0.95 and 1.05
 }
 
-std::shared_ptr<PF::Object> PF::Player::handleKeyboardEvent(SDL_Event* event)
+void PF::Player::handleEvent(PF::PlayerIntention playerIntention)
 {
-    switch (event->type)
+    switch (playerIntention)
     {
-        case SDL_EVENT_KEY_DOWN:
+        case PF::PlayerIntention::ATTACK:
         {
-            switch (event->key.key)
-            {
-                case SDLK_UP:
-                {
-                    m_velocity.y = -VELOCITY;
-                    break;
-                }
-                case SDLK_DOWN:
-                {
-                    m_velocity.y = VELOCITY;
-                    break;
-                }
-                case SDLK_LEFT:
-                {
-                    m_velocity.x = -VELOCITY;
-                    break;
-                }
-                case SDLK_RIGHT:
-                {
-                    m_velocity.x = VELOCITY;
-                    break;
-                }
-                default: break;
-            }
+            m_needToSpawnAttack = true;  // Set the flag to spawn an attack
             break;
         }
-        case SDL_EVENT_KEY_UP:
-        {
-            switch (event->key.key)
-            {
-                case SDLK_Q:
-                {
-                    return spawnAttack();
-                }
-                case SDLK_UP: [[fallthrough]];
-                case SDLK_DOWN:
-                {
-                    m_velocity.y = 0.0F;
-                    break;
-                }
-                case SDLK_LEFT: [[fallthrough]];
-                case SDLK_RIGHT:
-                {
-                    m_velocity.x = 0.0F;
-                    break;
-                }
-                default: break;
-            }
-            break;
-        }
+
         default: break;
     }
-    return {};
+}
+
+std::shared_ptr<PF::Object> PF::Player::spawnChildObject()
+{
+    if (m_needToSpawnAttack)
+    {
+        m_needToSpawnAttack = false;  // Reset the flag after spawning the attack
+        return spawnAttack();         // Spawn an attack object
+    }
+    return nullptr;  // No child object to spawn
 }
 
 std::shared_ptr<PF::Object> PF::Player::spawnAttack() const

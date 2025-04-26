@@ -174,13 +174,11 @@ SDL_AppResult SDL_AppEvent(void* appState, SDL_Event* event)
         switch (event->type)
         {
             case SDL_EVENT_QUIT: return SDL_APP_SUCCESS;
-            case SDL_EVENT_KEY_DOWN: [[fallthrough]];
-            case SDL_EVENT_KEY_UP:
+            default:
             {
-                state->game->handleKeyboardEvent(event);
+                state->game->handleEvent(event);
                 break;
             }
-            default: break;
         }
     }
     catch (const PF::SDLException& e)
