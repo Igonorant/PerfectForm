@@ -28,8 +28,6 @@
 
 namespace
 {
-SDL_Joystick* g_joystick = nullptr;
-
 struct AppState
 {
     SDL_Window* window{nullptr};
@@ -116,11 +114,9 @@ SDL_AppResult SDL_AppInit(void** appState, int /*argc*/, char* /*argv*/[])
             }
         }
 
-        if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK)) { throw PF::SDLException("Couldn't initialize SDL."); }
+        if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS)) { throw PF::SDLException("Couldn't initialize SDL."); }
 
         g_appState = std::make_unique<AppState>();
-        if (g_appState == nullptr) { throw PF::SDLException("Failed to allocate memory for AppState."); }
-        // auto* state = static_cast<AppState*>(SDL_calloc(1, sizeof(AppState)));
         if (g_appState == nullptr) { throw PF::SDLException("Failed to allocate memory for AppState."); }
 
         if (!SDL_CreateWindowAndRenderer("Perfect Form", SDL_WINDOW_WIDTH, SDL_WINDOW_HEIGHT, 0, &g_appState->window,
@@ -153,25 +149,6 @@ SDL_AppResult SDL_AppEvent(void* appState, SDL_Event* event)
         switch (event->type)
         {
             case SDL_EVENT_QUIT: return SDL_APP_SUCCESS;
-            case SDL_EVENT_JOYSTICK_ADDED:
-                if (g_joystick == nullptr)
-                {
-                    g_joystick = SDL_OpenJoystick(event->jdevice.which);
-                    if (g_joystick == nullptr)
-                    {
-                        throw PF::SDLException(std::format("Failed to open joystick ID {}:", event->jdevice.which));
-                    }
-                }
-                break;
-            case SDL_EVENT_JOYSTICK_REMOVED:
-                if ((g_joystick != nullptr) && (SDL_GetJoystickID(g_joystick) == event->jdevice.which))
-                {
-                    SDL_CloseJoystick(g_joystick);
-                    g_joystick = nullptr;
-                }
-                break;
-            case SDL_EVENT_JOYSTICK_HAT_MOTION:
-                // HANDLE JOYSTICK HAT MOTION HERE
             case SDL_EVENT_KEY_DOWN: [[fallthrough]];
             case SDL_EVENT_KEY_UP:
             {
@@ -194,7 +171,6 @@ SDL_AppResult SDL_AppEvent(void* appState, SDL_Event* event)
 
 void SDL_AppQuit(void* appState, SDL_AppResult /*result*/)
 {
-    if (g_joystick != nullptr) { SDL_CloseJoystick(g_joystick); }
     if (appState != nullptr)
     {
         auto* state = static_cast<AppState*>(appState);
