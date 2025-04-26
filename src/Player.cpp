@@ -28,6 +28,65 @@ PF::Player::Player(std::size_t textureIdx, SDL_FRect srcRect, SDL_FPoint positio
 
 void PF::Player::update(Uint64 stepMs)
 {
+    // Update velocity based on the current state
+    switch (m_state)
+    {
+        case State::IDLE:
+        {
+            m_velocity.x = 0.0F;
+            m_velocity.y = 0.0F;
+            break;
+        }
+        case State::MOVING_UP:
+        {
+            m_velocity.x = 0.0F;
+            m_velocity.y = -VELOCITY;
+            break;
+        }
+        case State::MOVING_DOWN:
+        {
+            m_velocity.x = 0.0F;
+            m_velocity.y = VELOCITY;
+            break;
+        }
+        case State::MOVING_LEFT:
+        {
+            m_velocity.x = -VELOCITY;
+            m_velocity.y = 0.0F;
+            break;
+        }
+        case State::MOVING_RIGHT:
+        {
+            m_velocity.x = VELOCITY;
+            m_velocity.y = 0.0F;
+            break;
+        }
+        case State::MOVING_UP_LEFT:
+        {
+            m_velocity.x = -VELOCITY * 0.7071F;  // Diagonal movement
+            m_velocity.y = -VELOCITY * 0.7071F;  // Diagonal movement
+            break;
+        }
+        case State::MOVING_UP_RIGHT:
+        {
+            m_velocity.x = VELOCITY * 0.7071F;   // Diagonal movement
+            m_velocity.y = -VELOCITY * 0.7071F;  // Diagonal movement
+            break;
+        }
+        case State::MOVING_DOWN_LEFT:
+        {
+            m_velocity.x = -VELOCITY * 0.7071F;  // Diagonal movement
+            m_velocity.y = VELOCITY * 0.7071F;   // Diagonal movement
+            break;
+        }
+        case State::MOVING_DOWN_RIGHT:
+        {
+            m_velocity.x = VELOCITY * 0.7071F;  // Diagonal movement
+            m_velocity.y = VELOCITY * 0.7071F;  // Diagonal movement
+            break;
+        }
+    }
+
     m_angle += static_cast<float>(stepMs) * ANGLE_INCREMENT;
     m_position.x += m_velocity.x;                                             // Update position based on velocity
     m_position.y += m_velocity.y;                                             // Update position based on velocity
@@ -41,6 +100,210 @@ void PF::Player::handleEvent(PF::PlayerIntention playerIntention)
         case PF::PlayerIntention::ATTACK:
         {
             m_needToSpawnAttack = true;  // Set the flag to spawn an attack
+            break;
+        }
+        case PF::PlayerIntention::MOVE_UP:
+        {
+            switch (m_state)
+            {
+                case State::IDLE: [[fallthrough]];
+                case State::MOVING_DOWN:
+                {
+                    m_state = State::MOVING_UP;
+                    break;
+                }
+
+                case State::MOVING_LEFT: [[fallthrough]];
+                case State::MOVING_DOWN_LEFT:
+                {
+                    m_state = State::MOVING_UP_LEFT;
+                    break;
+                }
+
+                case State::MOVING_RIGHT: [[fallthrough]];
+                case State::MOVING_DOWN_RIGHT:
+                {
+                    m_state = State::MOVING_UP_RIGHT;
+                    break;
+                }
+                default: break;
+            }
+            break;
+        }
+        case PF::PlayerIntention::MOVE_DOWN:
+        {
+            switch (m_state)
+            {
+                case State::IDLE: [[fallthrough]];
+                case State::MOVING_UP:
+                {
+                    m_state = State::MOVING_DOWN;
+                    break;
+                }
+
+                case State::MOVING_LEFT: [[fallthrough]];
+                case State::MOVING_UP_LEFT:
+                {
+                    m_state = State::MOVING_DOWN_LEFT;
+                    break;
+                }
+
+                case State::MOVING_RIGHT: [[fallthrough]];
+                case State::MOVING_UP_RIGHT:
+                {
+                    m_state = State::MOVING_DOWN_RIGHT;
+                    break;
+                }
+                default: break;
+            }
+            break;
+        }
+        case PF::PlayerIntention::MOVE_LEFT:
+        {
+            switch (m_state)
+            {
+                case State::IDLE: [[fallthrough]];
+                case State::MOVING_RIGHT:
+                {
+                    m_state = State::MOVING_LEFT;
+                    break;
+                }
+
+                case State::MOVING_UP: [[fallthrough]];
+                case State::MOVING_UP_RIGHT:
+                {
+                    m_state = State::MOVING_UP_LEFT;
+                    break;
+                }
+
+                case State::MOVING_DOWN: [[fallthrough]];
+                case State::MOVING_DOWN_RIGHT:
+                {
+                    m_state = State::MOVING_DOWN_LEFT;
+                    break;
+                }
+                default: break;
+            }
+            break;
+        }
+        case PF::PlayerIntention::MOVE_RIGHT:
+        {
+            switch (m_state)
+            {
+                case State::IDLE: [[fallthrough]];
+                case State::MOVING_LEFT:
+                {
+                    m_state = State::MOVING_RIGHT;
+                    break;
+                }
+
+                case State::MOVING_UP: [[fallthrough]];
+                case State::MOVING_UP_LEFT:
+                {
+                    m_state = State::MOVING_UP_RIGHT;
+                    break;
+                }
+
+                case State::MOVING_DOWN: [[fallthrough]];
+                case State::MOVING_DOWN_LEFT:
+                {
+                    m_state = State::MOVING_DOWN_RIGHT;
+                    break;
+                }
+                default: break;
+            }
+            break;
+        }
+        case PF::PlayerIntention::MOVE_STOP_UP:
+        {
+            switch (m_state)
+            {
+                case State::MOVING_UP:
+                {
+                    m_state = State::IDLE;  // Stop moving up
+                    break;
+                }
+                case State::MOVING_UP_LEFT:
+                {
+                    m_state = State::MOVING_LEFT;  // Stop moving up-left
+                    break;
+                }
+                case State::MOVING_UP_RIGHT:
+                {
+                    m_state = State::MOVING_RIGHT;  // Stop moving up-right
+                    break;
+                }
+                default: break;
+            }
+            break;
+        }
+        case PF::PlayerIntention::MOVE_STOP_DOWN:
+        {
+            switch (m_state)
+            {
+                case State::MOVING_DOWN:
+                {
+                    m_state = State::IDLE;  // Stop moving down
+                    break;
+                }
+                case State::MOVING_DOWN_LEFT:
+                {
+                    m_state = State::MOVING_LEFT;  // Stop moving down-left
+                    break;
+                }
+                case State::MOVING_DOWN_RIGHT:
+                {
+                    m_state = State::MOVING_RIGHT;  // Stop moving down-right
+                    break;
+                }
+                default: break;
+            }
+            break;
+        }
+        case PF::PlayerIntention::MOVE_STOP_LEFT:
+        {
+            switch (m_state)
+            {
+                case State::MOVING_LEFT:
+                {
+                    m_state = State::IDLE;  // Stop moving left
+                    break;
+                }
+                case State::MOVING_UP_LEFT:
+                {
+                    m_state = State::MOVING_UP;  // Stop moving up-left
+                    break;
+                }
+                case State::MOVING_DOWN_LEFT:
+                {
+                    m_state = State::MOVING_DOWN;  // Stop moving down-left
+                    break;
+                }
+                default: break;
+            }
+            break;
+        }
+        case PF::PlayerIntention::MOVE_STOP_RIGHT:
+        {
+            switch (m_state)
+            {
+                case State::MOVING_RIGHT:
+                {
+                    m_state = State::IDLE;  // Stop moving right
+                    break;
+                }
+                case State::MOVING_UP_RIGHT:
+                {
+                    m_state = State::MOVING_UP;  // Stop moving up-right
+                    break;
+                }
+                case State::MOVING_DOWN_RIGHT:
+                {
+                    m_state = State::MOVING_DOWN;  // Stop moving down-right
+                    break;
+                }
+                default: break;
+            }
             break;
         }
 
@@ -77,6 +340,7 @@ PF::Attack::Attack(std::size_t textureIdx, SDL_FRect srcRect, SDL_FPoint positio
     : Object(textureIdx, srcRect, position, size)
 {
 }
+
 void PF::Attack::update(Uint64 stepMs)
 {
     m_angle += static_cast<float>(stepMs) * ATTACK_ANGLE_INCREMENT;

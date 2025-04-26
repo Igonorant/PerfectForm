@@ -14,6 +14,19 @@ constexpr float DEFAULT_DECELERATION = 0.025F;
 
 class Player : public Object
 {
+    enum class State
+    {
+        IDLE,
+        MOVING_UP,
+        MOVING_DOWN,
+        MOVING_LEFT,
+        MOVING_RIGHT,
+        MOVING_UP_LEFT,
+        MOVING_UP_RIGHT,
+        MOVING_DOWN_LEFT,
+        MOVING_DOWN_RIGHT,
+    };
+
   public:
     Player(std::size_t textureIdx, SDL_FRect srcRect, SDL_FPoint position, float size);
 
@@ -29,6 +42,8 @@ class Player : public Object
     std::shared_ptr<PF::Object> spawnAttack() const;
 
   private:
+    State m_state = State::IDLE;  // Current state of the player
+
     bool m_needToSpawnAttack = false;  // Flag to indicate if an attack should be spawned
 
     float m_angle = 0.0F;                  // Angle for circular motion
