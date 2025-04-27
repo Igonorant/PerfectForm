@@ -23,6 +23,7 @@ constexpr float ATTACK_SIZE_OSCILLATION = 0.005F;
 constexpr float ATTACK_SIZE_DECAY = 0.00005F;
 constexpr float MIN_ATTACK_SIZE = 0.02F;
 constexpr float DIAGONAL_FACTOR = 0.7071F;  // 1/sqrt(2) for diagonal movement
+constexpr Uint64 ATTACK_COOLDOWN_MS = 100;  // Time between attacks in milliseconds
 
 PF::Player::Player(std::size_t textureIdx, SDL_FRect srcRect, SDL_FPoint position, float size)
     : Object(textureIdx, srcRect, position, size)
@@ -31,8 +32,10 @@ PF::Player::Player(std::size_t textureIdx, SDL_FRect srcRect, SDL_FPoint positio
 
 void PF::Player::update(Uint64 stepMs)
 {
+    m_playerClock += stepMs;  // Update player clock
+
     // Update velocity based on the current state
-    switch (m_state)
+    switch (m_movementState)
     {
         case State::IDLE:
         {
@@ -95,6 +98,29 @@ void PF::Player::update(Uint64 stepMs)
             m_velocity.y = VELOCITY * DIAGONAL_FACTOR;  // Diagonal movement
             break;
         }
+        default:
+        {
+            throw PF::Exception("Invalid player movement state");
+        }
+    }
+
+    switch (m_actionState)
+    {
+        case State::IDLE:
+        {
+            m_needToSpawnAttack = false;  // Reset the flag when not attacking
+            m_lastAttackTime = 0;         // Reset the last attack time
+            break;
+        }
+        case State::ATTACKING:
+        {
+            m_needToSpawnAttack = m_playerClock - m_lastAttackTime >= ATTACK_COOLDOWN_MS;
+            break;
+        }
+        default:
+        {
+            throw PF::Exception("Invalid player action state");
+        }
     }
 
     m_angle += static_cast<float>(stepMs) * ANGLE_INCREMENT;
@@ -105,37 +131,38 @@ void PF::Player::update(Uint64 stepMs)
 
 bool PF::Player::isMovingUp() const
 {
-    return m_state == State::MOVING_UP || m_state == State::MOVING_UP_LEFT || m_state == State::MOVING_UP_RIGHT;
+    return m_movementState == State::MOVING_UP || m_movementState == State::MOVING_UP_LEFT ||
+           m_movementState == State::MOVING_UP_RIGHT;
 }
 
 bool PF::Player::isMovingDown() const
 {
-    return m_state == State::MOVING_DOWN || m_state == State::MOVING_DOWN_LEFT || m_state == State::MOVING_DOWN_RIGHT;
+    return m_movementState == State::MOVING_DOWN || m_movementState == State::MOVING_DOWN_LEFT ||
+           m_movementState == State::MOVING_DOWN_RIGHT;
 }
 
 bool PF::Player::isMovingLeft() const
 {
-    return m_state == State::MOVING_LEFT || m_state == State::MOVING_UP_LEFT || m_state == State::MOVING_DOWN_LEFT;
+    return m_movementState == State::MOVING_LEFT || m_movementState == State::MOVING_UP_LEFT ||
+           m_movementState == State::MOVING_DOWN_LEFT;
 }
 
 bool PF::Player::isMovingRight() const
 {
-    return m_state == State::MOVING_RIGHT || m_state == State::MOVING_UP_RIGHT || m_state == State::MOVING_DOWN_RIGHT;
+    return m_movementState == State::MOVING_RIGHT || m_movementState == State::MOVING_UP_RIGHT ||
+           m_movementState == State::MOVING_DOWN_RIGHT;
 }
 
-void PF::Player::handleAttackIntention()
-{
-    m_needToSpawnAttack = true;  // Set the flag to spawn an attack
-}
+void PF::Player::handleAttackIntention(const bool stop) { m_actionState = stop ? State::IDLE : State::ATTACKING; }
 
 void PF::Player::handleMoveUp(const bool stop)
 {
     const bool left = isMovingLeft();
     const bool right = isMovingRight();
 
-    if (left && !right) { m_state = stop ? State::MOVING_LEFT : State::MOVING_UP_LEFT; }
-    else if (right && !left) { m_state = stop ? State::MOVING_RIGHT : State::MOVING_UP_RIGHT; }
-    else { m_state = stop ? State::IDLE : State::MOVING_UP; }
+    if (left && !right) { m_movementState = stop ? State::MOVING_LEFT : State::MOVING_UP_LEFT; }
+    else if (right && !left) { m_movementState = stop ? State::MOVING_RIGHT : State::MOVING_UP_RIGHT; }
+    else { m_movementState = stop ? State::IDLE : State::MOVING_UP; }
 }
 
 void PF::Player::handleMoveDown(const bool stop)
@@ -143,9 +170,9 @@ void PF::Player::handleMoveDown(const bool stop)
     const bool left = isMovingLeft();
     const bool right = isMovingRight();
 
-    if (left && !right) { m_state = stop ? State::MOVING_LEFT : State::MOVING_DOWN_LEFT; }
-    else if (right && !left) { m_state = stop ? State::MOVING_RIGHT : State::MOVING_DOWN_RIGHT; }
-    else { m_state = stop ? State::IDLE : State::MOVING_DOWN; }
+    if (left && !right) { m_movementState = stop ? State::MOVING_LEFT : State::MOVING_DOWN_LEFT; }
+    else if (right && !left) { m_movementState = stop ? State::MOVING_RIGHT : State::MOVING_DOWN_RIGHT; }
+    else { m_movementState = stop ? State::IDLE : State::MOVING_DOWN; }
 }
 
 void PF::Player::handleMoveLeft(const bool stop)
@@ -153,9 +180,9 @@ void PF::Player::handleMoveLeft(const bool stop)
     const bool up = isMovingUp();
     const bool down = isMovingDown();
 
-    if (up && !down) { m_state = stop ? State::MOVING_UP : State::MOVING_UP_LEFT; }
-    else if (down && !up) { m_state = stop ? State::MOVING_DOWN : State::MOVING_DOWN_LEFT; }
-    else { m_state = stop ? State::IDLE : State::MOVING_LEFT; }
+    if (up && !down) { m_movementState = stop ? State::MOVING_UP : State::MOVING_UP_LEFT; }
+    else if (down && !up) { m_movementState = stop ? State::MOVING_DOWN : State::MOVING_DOWN_LEFT; }
+    else { m_movementState = stop ? State::IDLE : State::MOVING_LEFT; }
 }
 
 void PF::Player::handleMoveRight(const bool stop)
@@ -163,9 +190,9 @@ void PF::Player::handleMoveRight(const bool stop)
     const bool up = isMovingUp();
     const bool down = isMovingDown();
 
-    if (up && !down) { m_state = stop ? State::MOVING_UP : State::MOVING_UP_RIGHT; }
-    else if (down && !up) { m_state = stop ? State::MOVING_DOWN : State::MOVING_DOWN_RIGHT; }
-    else { m_state = stop ? State::IDLE : State::MOVING_RIGHT; }
+    if (up && !down) { m_movementState = stop ? State::MOVING_UP : State::MOVING_UP_RIGHT; }
+    else if (down && !up) { m_movementState = stop ? State::MOVING_DOWN : State::MOVING_DOWN_RIGHT; }
+    else { m_movementState = stop ? State::IDLE : State::MOVING_RIGHT; }
 }
 
 void PF::Player::handleEvent(PF::PlayerIntention playerIntention)
@@ -174,7 +201,12 @@ void PF::Player::handleEvent(PF::PlayerIntention playerIntention)
     {
         case PF::PlayerIntention::ATTACK:
         {
-            handleAttackIntention();
+            handleAttackIntention(false /*stop*/);
+            break;
+        }
+        case PF::PlayerIntention::ATTACK_STOP:
+        {
+            handleAttackIntention(true /*stop*/);
             break;
         }
         case PF::PlayerIntention::MOVE_UP:
@@ -226,8 +258,9 @@ std::shared_ptr<PF::Object> PF::Player::spawnChildObject()
 {
     if (m_needToSpawnAttack)
     {
-        m_needToSpawnAttack = false;  // Reset the flag after spawning the attack
-        return spawnAttack();         // Spawn an attack object
+        m_needToSpawnAttack = false;       // Reset the flag after spawning the attack
+        m_lastAttackTime = m_playerClock;  // Update the last attack time
+        return spawnAttack();              // Spawn an attack object
     }
     return nullptr;  // No child object to spawn
 }

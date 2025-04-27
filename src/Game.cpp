@@ -106,6 +106,7 @@ PF::PlayerIntention PF::Game::getPlayerIntention(SDL_Event* event)
                 case SDLK_DOWN: playerIntention = PF::PlayerIntention::MOVE_STOP_DOWN; break;
                 case SDLK_LEFT: playerIntention = PF::PlayerIntention::MOVE_STOP_LEFT; break;
                 case SDLK_RIGHT: playerIntention = PF::PlayerIntention::MOVE_STOP_RIGHT; break;
+                case SDLK_Q: playerIntention = PF::PlayerIntention::ATTACK_STOP; break;
                 default: break;
             }
             LogIntentionFromEvent(event, playerIntention);

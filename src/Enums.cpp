@@ -14,6 +14,8 @@ const char* PF::toString(const PF::PlayerIntention playerIntention)
         case PF::PlayerIntention::MOVE_STOP_LEFT: return "MOVE_STOP_LEFT";
         case PF::PlayerIntention::MOVE_STOP_RIGHT: return "MOVE_STOP_RIGHT";
         case PF::PlayerIntention::ATTACK: return "ATTACK";
-        default: return "UNKNOWN_PLAYER_INTENTION";
+        case PF::PlayerIntention::ATTACK_STOP: return "ATTACK_STOP";
+        case PF::PlayerIntention::PlayerIntention_Last: return "UNKNOWN_PLAYER_INTENTION";
     }
+    return nullptr;
 }

@@ -25,6 +25,7 @@ class Player : public Object
         MOVING_UP_RIGHT,
         MOVING_DOWN_LEFT,
         MOVING_DOWN_RIGHT,
+        ATTACKING
     };
 
   public:
@@ -41,7 +42,7 @@ class Player : public Object
     [[nodiscard]]
     std::shared_ptr<PF::Object> spawnAttack() const;
 
-    void handleAttackIntention();
+    void handleAttackIntention(bool stop);
     void handleMoveUp(bool stop);
     void handleMoveDown(bool stop);
     void handleMoveLeft(bool stop);
@@ -53,9 +54,13 @@ class Player : public Object
     [[nodiscard]] bool isMovingRight() const;
 
   private:
-    State m_state = State::IDLE;  // Current state of the player
+    Uint64 m_playerClock = 0;  // Player clock for timing
+
+    State m_movementState = State::IDLE;  // Current state of the player movement
+    State m_actionState = State::IDLE;    // Current state of the player action
 
     bool m_needToSpawnAttack = false;  // Flag to indicate if an attack should be spawned
+    Uint64 m_lastAttackTime = 0;       // Last time the attack was performed
 
     float m_angle = 0.0F;                      // Angle for circular motion
     SDL_FPoint m_velocity = {0.0F, 0.0F};      // Velocity vector for movement

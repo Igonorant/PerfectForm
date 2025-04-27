@@ -14,6 +14,7 @@ enum class PlayerIntention
     MOVE_STOP_LEFT,
     MOVE_STOP_RIGHT,
     ATTACK,
+    ATTACK_STOP,
     PlayerIntention_Last
 };
 
