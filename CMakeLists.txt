@@ -40,7 +40,11 @@ PRIVATE
 
 # Enable all warnings
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(perfectform PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(perfectform PRIVATE
+        -Werror
+        -Wall
+        -Wextra
+        -Wpedantic)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     target_compile_options(perfectform PRIVATE /W4)
 endif()
