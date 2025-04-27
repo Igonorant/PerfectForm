@@ -103,217 +103,118 @@ void PF::Player::update(Uint64 stepMs)
     m_size = 1.0F + (sinf(m_angle * SCALE_ANGLE_MULTIPLIER) * SCALE_FACTOR);  // Scale between 0.95 and 1.05
 }
 
+bool PF::Player::isMovingUp() const
+{
+    return m_state == State::MOVING_UP || m_state == State::MOVING_UP_LEFT || m_state == State::MOVING_UP_RIGHT;
+}
+
+bool PF::Player::isMovingDown() const
+{
+    return m_state == State::MOVING_DOWN || m_state == State::MOVING_DOWN_LEFT || m_state == State::MOVING_DOWN_RIGHT;
+}
+
+bool PF::Player::isMovingLeft() const
+{
+    return m_state == State::MOVING_LEFT || m_state == State::MOVING_UP_LEFT || m_state == State::MOVING_DOWN_LEFT;
+}
+
+bool PF::Player::isMovingRight() const
+{
+    return m_state == State::MOVING_RIGHT || m_state == State::MOVING_UP_RIGHT || m_state == State::MOVING_DOWN_RIGHT;
+}
+
+void PF::Player::handleAttackIntention()
+{
+    m_needToSpawnAttack = true;  // Set the flag to spawn an attack
+}
+
+void PF::Player::handleMoveUp(const bool stop)
+{
+    const bool left = isMovingLeft();
+    const bool right = isMovingRight();
+
+    if (left && !right) { m_state = stop ? State::MOVING_LEFT : State::MOVING_UP_LEFT; }
+    else if (right && !left) { m_state = stop ? State::MOVING_RIGHT : State::MOVING_UP_RIGHT; }
+    else { m_state = stop ? State::IDLE : State::MOVING_UP; }
+}
+
+void PF::Player::handleMoveDown(const bool stop)
+{
+    const bool left = isMovingLeft();
+    const bool right = isMovingRight();
+
+    if (left && !right) { m_state = stop ? State::MOVING_LEFT : State::MOVING_DOWN_LEFT; }
+    else if (right && !left) { m_state = stop ? State::MOVING_RIGHT : State::MOVING_DOWN_RIGHT; }
+    else { m_state = stop ? State::IDLE : State::MOVING_DOWN; }
+}
+
+void PF::Player::handleMoveLeft(const bool stop)
+{
+    const bool up = isMovingUp();
+    const bool down = isMovingDown();
+
+    if (up && !down) { m_state = stop ? State::MOVING_UP : State::MOVING_UP_LEFT; }
+    else if (down && !up) { m_state = stop ? State::MOVING_DOWN : State::MOVING_DOWN_LEFT; }
+    else { m_state = stop ? State::IDLE : State::MOVING_LEFT; }
+}
+
+void PF::Player::handleMoveRight(const bool stop)
+{
+    const bool up = isMovingUp();
+    const bool down = isMovingDown();
+
+    if (up && !down) { m_state = stop ? State::MOVING_UP : State::MOVING_UP_RIGHT; }
+    else if (down && !up) { m_state = stop ? State::MOVING_DOWN : State::MOVING_DOWN_RIGHT; }
+    else { m_state = stop ? State::IDLE : State::MOVING_RIGHT; }
+}
+
 void PF::Player::handleEvent(PF::PlayerIntention playerIntention)
 {
     switch (playerIntention)
     {
         case PF::PlayerIntention::ATTACK:
         {
-            m_needToSpawnAttack = true;  // Set the flag to spawn an attack
+            handleAttackIntention();
             break;
         }
         case PF::PlayerIntention::MOVE_UP:
         {
-            switch (m_state)
-            {
-                case State::IDLE: [[fallthrough]];
-                case State::MOVING_DOWN:
-                {
-                    m_state = State::MOVING_UP;
-                    break;
-                }
-
-                case State::MOVING_LEFT: [[fallthrough]];
-                case State::MOVING_DOWN_LEFT:
-                {
-                    m_state = State::MOVING_UP_LEFT;
-                    break;
-                }
-
-                case State::MOVING_RIGHT: [[fallthrough]];
-                case State::MOVING_DOWN_RIGHT:
-                {
-                    m_state = State::MOVING_UP_RIGHT;
-                    break;
-                }
-                default: break;
-            }
+            handleMoveUp(false /*stop*/);
             break;
         }
         case PF::PlayerIntention::MOVE_DOWN:
         {
-            switch (m_state)
-            {
-                case State::IDLE: [[fallthrough]];
-                case State::MOVING_UP:
-                {
-                    m_state = State::MOVING_DOWN;
-                    break;
-                }
-
-                case State::MOVING_LEFT: [[fallthrough]];
-                case State::MOVING_UP_LEFT:
-                {
-                    m_state = State::MOVING_DOWN_LEFT;
-                    break;
-                }
-
-                case State::MOVING_RIGHT: [[fallthrough]];
-                case State::MOVING_UP_RIGHT:
-                {
-                    m_state = State::MOVING_DOWN_RIGHT;
-                    break;
-                }
-                default: break;
-            }
+            handleMoveDown(false /*stop*/);
             break;
         }
         case PF::PlayerIntention::MOVE_LEFT:
         {
-            switch (m_state)
-            {
-                case State::IDLE: [[fallthrough]];
-                case State::MOVING_RIGHT:
-                {
-                    m_state = State::MOVING_LEFT;
-                    break;
-                }
-
-                case State::MOVING_UP: [[fallthrough]];
-                case State::MOVING_UP_RIGHT:
-                {
-                    m_state = State::MOVING_UP_LEFT;
-                    break;
-                }
-
-                case State::MOVING_DOWN: [[fallthrough]];
-                case State::MOVING_DOWN_RIGHT:
-                {
-                    m_state = State::MOVING_DOWN_LEFT;
-                    break;
-                }
-                default: break;
-            }
+            handleMoveLeft(false /*stop*/);
             break;
         }
         case PF::PlayerIntention::MOVE_RIGHT:
         {
-            switch (m_state)
-            {
-                case State::IDLE: [[fallthrough]];
-                case State::MOVING_LEFT:
-                {
-                    m_state = State::MOVING_RIGHT;
-                    break;
-                }
-
-                case State::MOVING_UP: [[fallthrough]];
-                case State::MOVING_UP_LEFT:
-                {
-                    m_state = State::MOVING_UP_RIGHT;
-                    break;
-                }
-
-                case State::MOVING_DOWN: [[fallthrough]];
-                case State::MOVING_DOWN_LEFT:
-                {
-                    m_state = State::MOVING_DOWN_RIGHT;
-                    break;
-                }
-                default: break;
-            }
+            handleMoveRight(false /*stop*/);
             break;
         }
         case PF::PlayerIntention::MOVE_STOP_UP:
         {
-            switch (m_state)
-            {
-                case State::MOVING_UP:
-                {
-                    m_state = State::IDLE;  // Stop moving up
-                    break;
-                }
-                case State::MOVING_UP_LEFT:
-                {
-                    m_state = State::MOVING_LEFT;  // Stop moving up-left
-                    break;
-                }
-                case State::MOVING_UP_RIGHT:
-                {
-                    m_state = State::MOVING_RIGHT;  // Stop moving up-right
-                    break;
-                }
-                default: break;
-            }
+            handleMoveUp(true /*stop*/);
             break;
         }
         case PF::PlayerIntention::MOVE_STOP_DOWN:
         {
-            switch (m_state)
-            {
-                case State::MOVING_DOWN:
-                {
-                    m_state = State::IDLE;  // Stop moving down
-                    break;
-                }
-                case State::MOVING_DOWN_LEFT:
-                {
-                    m_state = State::MOVING_LEFT;  // Stop moving down-left
-                    break;
-                }
-                case State::MOVING_DOWN_RIGHT:
-                {
-                    m_state = State::MOVING_RIGHT;  // Stop moving down-right
-                    break;
-                }
-                default: break;
-            }
+            handleMoveDown(true /*stop*/);
             break;
         }
         case PF::PlayerIntention::MOVE_STOP_LEFT:
         {
-            switch (m_state)
-            {
-                case State::MOVING_LEFT:
-                {
-                    m_state = State::IDLE;  // Stop moving left
-                    break;
-                }
-                case State::MOVING_UP_LEFT:
-                {
-                    m_state = State::MOVING_UP;  // Stop moving up-left
-                    break;
-                }
-                case State::MOVING_DOWN_LEFT:
-                {
-                    m_state = State::MOVING_DOWN;  // Stop moving down-left
-                    break;
-                }
-                default: break;
-            }
+            handleMoveLeft(true /*stop*/);
             break;
         }
         case PF::PlayerIntention::MOVE_STOP_RIGHT:
         {
-            switch (m_state)
-            {
-                case State::MOVING_RIGHT:
-                {
-                    m_state = State::IDLE;  // Stop moving right
-                    break;
-                }
-                case State::MOVING_UP_RIGHT:
-                {
-                    m_state = State::MOVING_UP;  // Stop moving up-right
-                    break;
-                }
-                case State::MOVING_DOWN_RIGHT:
-                {
-                    m_state = State::MOVING_DOWN;  // Stop moving down-right
-                    break;
-                }
-                default: break;
-            }
+            handleMoveRight(true /*stop*/);
             break;
         }
 

@@ -41,6 +41,17 @@ class Player : public Object
     [[nodiscard]]
     std::shared_ptr<PF::Object> spawnAttack() const;
 
+    void handleAttackIntention();
+    void handleMoveUp(bool stop);
+    void handleMoveDown(bool stop);
+    void handleMoveLeft(bool stop);
+    void handleMoveRight(bool stop);
+
+    [[nodiscard]] bool isMovingUp() const;
+    [[nodiscard]] bool isMovingDown() const;
+    [[nodiscard]] bool isMovingLeft() const;
+    [[nodiscard]] bool isMovingRight() const;
+
   private:
     State m_state = State::IDLE;  // Current state of the player
 
