@@ -1,10 +1,14 @@
-#include <SDL3/SDL.h>
-
 #include <stdexcept>
 #include <string_view>
 
 namespace PF
 {
+
+class Exception : public std::runtime_error
+{
+  public:
+    explicit Exception(std::string_view message);
+};
 
 class SDLException : public std::runtime_error
 {
